@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 
 import Config from './config';
+import { AuthModule, UsersModule } from 'src/api';
 
 @Module({
   imports: [
@@ -21,6 +22,8 @@ import Config from './config';
     //   token: process.env.TG_KEY,
     // }),
     MongooseModule.forRoot(process.env.DB_URL!),
+    AuthModule,
+    UsersModule,
   ],
   // providers: [AppUpdate],
 })
