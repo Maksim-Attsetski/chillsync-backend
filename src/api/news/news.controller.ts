@@ -9,6 +9,7 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { NewsService } from './news.service';
@@ -17,11 +18,13 @@ import { UpdateNewsDto } from './dto/update-news.dto';
 import { type IQuery } from 'src/utils';
 
 import { type IFile } from 'src/modules/files';
+import { IsAdminGuard } from 'src/guards';
 
 @Controller('news')
 export class NewsController {
   constructor(private readonly newsService: NewsService) {}
 
+  @UseGuards(IsAdminGuard)
   @Post()
   @UseInterceptors(FileInterceptor('preview'))
   async create(
@@ -41,11 +44,13 @@ export class NewsController {
     return this.newsService.findOne(id);
   }
 
+  @UseGuards(IsAdminGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateNewsDto: UpdateNewsDto) {
     return this.newsService.update(id, updateNewsDto);
   }
 
+  @UseGuards(IsAdminGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.newsService.remove(id);

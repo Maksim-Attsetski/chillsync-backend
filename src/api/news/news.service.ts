@@ -19,7 +19,11 @@ export class NewsService {
 
     return await MongoUtils.create({
       model: this.newsModel,
-      data: { ...createNewsDto, preview: name },
+      data: {
+        ...createNewsDto,
+        tag: JSON.parse(createNewsDto?.tag ?? '[]'),
+        preview: name,
+      },
     });
   }
 

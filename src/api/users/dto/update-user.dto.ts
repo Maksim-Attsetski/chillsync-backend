@@ -1,7 +1,7 @@
-import { CreateUserDto } from './create-user.dto';
+import { CreateUserDto, ERoles } from './create-user.dto';
 
 export class UpdateUserDto extends CreateUserDto {
   public_id: string;
-  role: string;
+  role: ERoles;
   providers: string[];
 }

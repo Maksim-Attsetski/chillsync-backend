@@ -1,3 +1,5 @@
+import { ERoles } from './create-user.dto';
+
 export class GetUserDto {
   _id: string;
   createdAt: number;
@@ -7,7 +9,7 @@ export class GetUserDto {
   sex: 'male' | 'female';
   location: [number, number];
   public_id: string;
-  role: string;
+  role: ERoles;
   providers: string[];
 
   constructor(model?: Omit<GetUserDto, 'password'>) {
@@ -18,7 +20,7 @@ export class GetUserDto {
     this.last_name = model?.last_name ?? '';
     this.public_id = model?.public_id ?? '';
     this.sex = model?.sex ?? 'male';
-    this.role = model?.role ?? '';
+    this.role = model?.role ?? ERoles.USER;
     this.location = model?.location ?? [0, 0];
     this.providers = model?.providers ?? [];
   }

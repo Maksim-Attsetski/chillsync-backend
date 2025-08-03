@@ -40,7 +40,7 @@ class FileModule {
     try {
       const file = path.resolve('static', fileName);
       await fs.rm(file, (err) => {
-        throw err;
+        if (err) throw err;
       });
     } catch (error) {
       throw error;
@@ -49,9 +49,7 @@ class FileModule {
 
   async deleteManyFiles(fileNames: string[]): Promise<void> {
     try {
-      fileNames.forEach(async (fileName) => {
-        await this.deleteFile(fileName);
-      });
+      await Promise.allSettled(fileNames.map(this.deleteFile));
     } catch (error) {
       throw error;
     }

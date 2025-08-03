@@ -157,7 +157,7 @@ export class AuthService {
 
   async validateToken(token: string, isRefresh?: boolean) {
     try {
-      return await this.jwtService.verify(token, {
+      return await this.jwtService.verifyAsync(token, {
         secret: isRefresh ? Config.refreshSecret : Config.accessSecret,
       });
     } catch (error) {
