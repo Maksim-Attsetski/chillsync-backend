@@ -6,15 +6,19 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { type IQuery } from 'src/utils';
+import { AuthGuard } from 'src/guards';
+
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { type IQuery } from 'src/utils';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(AuthGuard)
   @Get()
   findAll(@Query() query: IQuery) {
     return this.usersService.findAll(query);

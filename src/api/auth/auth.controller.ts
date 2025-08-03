@@ -44,9 +44,11 @@ export class AuthController {
   @Get('refresh')
   async refresh(@Req() req, @Res({ passthrough: true }) res) {
     const refreshToken = req.cookies?.refreshToken;
+    const accessToken = req?.headers?.authorization?.split(' ')?.at(-1);
 
     const data: IAuthResponse = await this.authService.refresh(
       refreshToken,
+      accessToken,
       req.headers['user-agent'],
     );
     return this.setCookies(data, res);

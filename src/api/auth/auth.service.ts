@@ -139,7 +139,11 @@ export class AuthService {
 
   async generateAndSaveTokens(user: any, userAgent: string): Promise<ITokens> {
     const tokens = await this.generateTokens(user);
-    await this.saveTokens(user?._id + '', tokens.refreshToken, userAgent);
+
+    const token = userAgent.includes('okhttp')
+      ? tokens.accessToken
+      : tokens.refreshToken;
+    await this.saveTokens(user?._id + '', token, userAgent);
 
     return tokens;
   }
@@ -161,9 +165,17 @@ export class AuthService {
     }
   }
 
-  async getToken(refreshToken: string): Promise<TokenDocument | null> {
+  async getToken(
+    refreshToken?: string,
+    accessToken?: string,
+  ): Promise<TokenDocument | null> {
     try {
-      return await this.tokenModel.findOne({ refreshToken });
+      console.log('====================================');
+      console.log('token', refreshToken ?? accessToken);
+      console.log('====================================');
+      return await this.tokenModel.findOne({
+        refreshToken: refreshToken ?? accessToken,
+      });
     } catch (error) {
       return null;
     }
@@ -171,15 +183,17 @@ export class AuthService {
 
   async refresh(
     refreshToken: string,
+    accessToken: string,
     userAgent: string,
   ): Promise<IAuthResponse> {
-    if (!refreshToken) {
+    if (!(refreshToken || accessToken)) {
       throw Errors.unauthorized();
     }
     const tokenIsValid = await this.validateToken(refreshToken, true);
-    const tokenData = await this.getToken(refreshToken);
+    const accessTokenIsValid = await this.validateToken(accessToken);
+    const tokenData = await this.getToken(refreshToken, accessToken);
 
-    if (!tokenData || !tokenIsValid) {
+    if (!tokenData || !(tokenIsValid || accessTokenIsValid)) {
       throw Errors.unauthorized();
     }
 

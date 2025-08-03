@@ -170,13 +170,15 @@ class FindUtils {
     const filter = this.getFilter(query?.filter);
     const sorting = this.getSorting(query?.sort);
 
+    const keys = Object.keys(new dto());
     const dependenciesIsObj =
-      typeof dependencies === 'object' ? dependencies : Object.keys(new dto());
+      typeof dependencies === 'object' ? dependencies : keys;
 
     const populateDocs = dependencies ? dependenciesIsObj : [];
 
     return await model
       .find({ ...search, ...filter })
+      .select(keys)
       .limit(limit)
       .skip(page)
       .populate(populateDocs)
