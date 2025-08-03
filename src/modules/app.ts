@@ -7,6 +7,7 @@ import { join } from 'path';
 
 import Config from './config';
 import { AuthModule, UsersModule } from 'src/api';
+import { FriendModule } from 'src/api/friends';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthModule, UsersModule } from 'src/api';
     MongooseModule.forRoot(process.env.DB_URL!),
     AuthModule,
     UsersModule,
+    FriendModule,
   ],
   // providers: [AppUpdate],
 })

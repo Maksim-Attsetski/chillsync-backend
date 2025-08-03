@@ -170,9 +170,6 @@ export class AuthService {
     accessToken?: string,
   ): Promise<TokenDocument | null> {
     try {
-      console.log('====================================');
-      console.log('token', refreshToken ?? accessToken);
-      console.log('====================================');
       return await this.tokenModel.findOne({
         refreshToken: refreshToken ?? accessToken,
       });
