@@ -8,6 +8,7 @@ import { join } from 'path';
 import Config from './config';
 import { AuthModule, UsersModule } from 'src/api';
 import { FriendModule } from 'src/api/friends';
+import { NewsModule } from 'src/api/news';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { FriendModule } from 'src/api/friends';
     AuthModule,
     UsersModule,
     FriendModule,
+    NewsModule,
   ],
   // providers: [AppUpdate],
 })
