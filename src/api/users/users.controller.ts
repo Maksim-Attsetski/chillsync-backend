@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { type IQuery } from 'src/utils';
-import { AuthGuard } from 'src/guards';
+import { AuthGuard, IsAdminGuard } from 'src/guards';
 
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -27,6 +27,15 @@ export class UsersController {
   @Get(':id')
   findOne(@Param('id') id: string, @Query('isFull') isFull: boolean) {
     return this.usersService.findOne(id, isFull);
+  }
+
+  @UseGuards(IsAdminGuard)
+  @Patch(':id/role')
+  updateRole(
+    @Param('id') id: string,
+    @Body() updateUserDto: { last: string; new: string },
+  ) {
+    return this.usersService.updatePassword(id, updateUserDto);
   }
 
   @Patch(':id/password')

@@ -58,7 +58,7 @@ class MongoUtils {
 
   async update({ model, id, data, dto, error, populate }: IProps) {
     try {
-      const item = await model.findByIdAndUpdate(id, data);
+      const item = await model.findByIdAndUpdate(id, data, { new: true });
 
       if (!item) throw Errors.notFound(error);
       return dto
@@ -73,10 +73,10 @@ class MongoUtils {
   }
 
   async delete({ model, id, error }: IProps) {
-    const item = await model.deleteOne({ id });
+    const item = await model.findOneAndDelete({ _id: id });
 
     if (!item) throw Errors.notFound(error);
-    return item.deletedCount;
+    return item;
   }
 }
 

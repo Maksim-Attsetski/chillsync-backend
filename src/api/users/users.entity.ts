@@ -1,5 +1,6 @@
 import { HydratedDocument } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ERoles } from './dto/create-user.dto';
 
 export type UsersDocument = HydratedDocument<Users>;
 
@@ -20,7 +21,7 @@ export class Users {
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ default: 'user' })
+  @Prop({ default: ERoles.USER })
   role: string;
 
   @Prop({ default: null })
@@ -29,8 +30,17 @@ export class Users {
   @Prop({ default: 'male' })
   sex: 'male' | 'female';
 
+  @Prop({ default: null })
+  avatar: string;
+
+  @Prop({ default: null })
+  blocked_at: number;
+
+  @Prop({ default: null })
+  updated_at: number;
+
   @Prop()
-  createdAt: number;
+  created_at: number;
 
   @Prop({ default: ['pass'] })
   providers: ['pass' | 'google'];

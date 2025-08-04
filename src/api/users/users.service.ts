@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUserDto } from './dto/get-user.dto';
 import { Users, UsersDocument } from './users.entity';
 import { AuthService } from '../auth';
+import { ERoles } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -34,11 +35,14 @@ export class UsersService {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: Partial<UpdateUserDto>) {
+    delete updateUserDto['password'];
+    delete updateUserDto['role'];
+
     return await MongoUtils.update({
       model: this.userModel,
       id,
-      data: updateUserDto,
+      data: { ...updateUserDto, updated_at: Date.now() },
       dto: GetUserDto,
       error: 'User',
     });
@@ -57,8 +61,21 @@ export class UsersService {
 
     const hashPassword = await hash(updateUserDto.new, 7);
     user.password = hashPassword;
-    await user.save();
+    user.updated_at = Date.now();
 
+    await user.save();
+    return true;
+  }
+
+  async updateRole(id: string, updateUserDto: { role: ERoles }) {
+    const user = await this.userModel.findById(id);
+
+    if (!user) throw Errors.notFound('user');
+
+    user.role = updateUserDto.role;
+    user.updated_at = Date.now();
+
+    await user.save();
     return true;
   }
 
