@@ -9,6 +9,7 @@ import Config from './config';
 import { AuthModule, UsersModule } from 'src/api';
 import { FriendModule } from 'src/api/friends';
 import { NewsModule } from 'src/api/news';
+import { SubscriptionModule } from 'src/api/subscriptions';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { NewsModule } from 'src/api/news';
     UsersModule,
     FriendModule,
     NewsModule,
+    SubscriptionModule,
   ],
   // providers: [AppUpdate],
 })
