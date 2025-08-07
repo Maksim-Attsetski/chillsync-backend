@@ -54,6 +54,7 @@ export class FriendService {
   async remove(id: string, isUserId = false) {
     if (isUserId) {
       await this.friendModel.deleteMany({ user_ids: { $in: id } });
+      await this.friendModel.deleteMany({ waiter: id });
       return 'success';
     }
 

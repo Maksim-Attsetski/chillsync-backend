@@ -12,6 +12,6 @@ export const FriendModel = MongooseModule.forFeature([
   imports: [FriendModel],
   controllers: [FriendController],
   providers: [FriendService],
-  exports: [],
+  exports: [FriendService, FriendModel],
 })
 export class FriendModule {}

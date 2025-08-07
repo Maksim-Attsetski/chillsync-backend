@@ -6,7 +6,6 @@ import { Movie, MovieSchema } from './movies.entity';
 import { AuthModule } from '../auth';
 import { MovieReactionService } from '../movie-reactions';
 import { MovieReactionModel } from '../movie-reactions/movie-reactions.module';
-import { JwtService } from '@nestjs/jwt';
 
 export const MovieModel = MongooseModule.forFeature([
   { name: Movie.name, schema: MovieSchema },
@@ -15,7 +14,7 @@ export const MovieModel = MongooseModule.forFeature([
 @Module({
   imports: [MovieModel, AuthModule, MovieReactionModel],
   controllers: [MovieController],
-  providers: [MovieService, MovieReactionService, JwtService],
+  providers: [MovieService, MovieReactionService],
   exports: [MovieModel, MovieService],
 })
 export class MovieModule {}
