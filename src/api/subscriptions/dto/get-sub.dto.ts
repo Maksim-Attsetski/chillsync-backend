@@ -2,7 +2,7 @@ import { UpdateSubDto } from './update-sub.dto';
 
 export class GetSubDto extends UpdateSubDto {
   _id: string;
-  created_at: number;
+  createdAt: number;
 
   constructor(model: GetSubDto) {
     super();
@@ -14,6 +14,6 @@ export class GetSubDto extends UpdateSubDto {
     this.live_time = model?.live_time;
     this.points = model?.points ?? [];
     this._id = model?._id;
-    this.created_at = model?.created_at;
+    this.createdAt = model?.createdAt;
   }
 }

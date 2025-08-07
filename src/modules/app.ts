@@ -15,6 +15,7 @@ import {
   SubscriptionModule,
 } from 'src/api';
 import { MovieModule } from 'src/api/movies';
+import { MovieReactionModule } from 'src/api/movie-reactions';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { MovieModule } from 'src/api/movies';
     SubscriptionModule,
     PingModule,
     MovieModule,
+    MovieReactionModule,
   ],
 })
 export class AppModule {}

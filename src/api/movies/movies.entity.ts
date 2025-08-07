@@ -30,7 +30,7 @@ export class Movie {
   vote_count: number;
 
   @Prop()
-  created_at: number;
+  createdAt: number;
 }
 
 export const MovieSchema = SchemaFactory.createForClass(Movie);

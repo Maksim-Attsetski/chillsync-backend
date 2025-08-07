@@ -2,7 +2,7 @@ import { ERoles } from './create-user.dto';
 
 export class GetUserDto {
   _id: string;
-  created_at: number;
+  createdAt: number;
   email: string;
   first_name: string;
   last_name: string;
@@ -17,7 +17,7 @@ export class GetUserDto {
 
   constructor(model?: Omit<GetUserDto, 'password'>) {
     this._id = model?._id ?? '';
-    this.created_at = model?.created_at ?? 0;
+    this.createdAt = model?.createdAt ?? 0;
     this.email = model?.email ?? '';
     this.first_name = model?.first_name ?? '';
     this.last_name = model?.last_name ?? '';

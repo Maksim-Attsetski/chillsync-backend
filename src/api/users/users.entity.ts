@@ -40,7 +40,7 @@ export class Users {
   updated_at: number;
 
   @Prop()
-  created_at: number;
+  createdAt: number;
 
   @Prop({ default: ['pass'] })
   providers: ['pass' | 'google'];

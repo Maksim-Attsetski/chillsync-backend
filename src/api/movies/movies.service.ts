@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 
 import { Errors, IQuery, MongoUtils } from 'src/utils';
@@ -8,18 +8,39 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie, MovieDocument } from './movies.entity';
 import { GetMovieDto } from './dto/get-movie.dto';
+import { MovieReactionService } from '../movie-reactions';
 
 @Injectable()
 export class MovieService {
   constructor(
     @InjectModel(Movie.name) private movieModel: Model<MovieDocument>,
+    @Inject(MovieReactionService)
+    private movieReactionService: MovieReactionService,
   ) {}
 
-  async create(createMovieDto: CreateMovieDto) {
-    return await MongoUtils.create({
-      model: this.movieModel,
-      data: { ...createMovieDto },
-    });
+  async create(
+    { reaction, ...createMovieDto }: CreateMovieDto,
+    userId: string,
+  ) {
+    const newMovie = await this.movieModel.updateOne(
+      { title: createMovieDto?.title },
+      createMovieDto,
+      {
+        upsert: true,
+      },
+    );
+
+    const id = newMovie.upsertedId as unknown as string | null;
+
+    if (id) {
+      await this.movieReactionService.create({
+        movie_id: id,
+        user_id: userId,
+        reaction,
+      });
+    }
+
+    return id;
   }
 
   async findAll(query: IQuery) {

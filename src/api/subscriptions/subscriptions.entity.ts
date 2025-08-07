@@ -28,7 +28,7 @@ export class Subscription {
   }[];
 
   @Prop()
-  created_at: number;
+  createdAt: number;
 }
 
 export const SubscriptionSchema = SchemaFactory.createForClass(Subscription);

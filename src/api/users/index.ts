@@ -5,6 +5,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { GetUserDto } from './dto/get-user.dto';
 
+export * from './dto/token.dto';
 export * from './dto/create-user.dto';
 export * from './users.entity';
 
