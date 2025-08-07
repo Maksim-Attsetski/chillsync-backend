@@ -4,3 +4,4 @@ export * from './friends';
 export * from './news';
 export * from './ping';
 export * from './subscriptions';
+export * from './movies';

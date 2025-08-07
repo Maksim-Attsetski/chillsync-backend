@@ -14,6 +14,7 @@ import {
   PingModule,
   SubscriptionModule,
 } from 'src/api';
+import { MovieModule } from 'src/api/movies';
 
 @Module({
   imports: [
@@ -24,10 +25,6 @@ import {
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'static'),
     }),
-    // TelegrafModule.forRoot({
-    //   middlewares: [sessions.middleware()],
-    //   token: process.env.TG_KEY,
-    // }),
     MongooseModule.forRoot(process.env.DB_URL!),
     AuthModule,
     UsersModule,
@@ -35,7 +32,7 @@ import {
     NewsModule,
     SubscriptionModule,
     PingModule,
+    MovieModule,
   ],
-  // providers: [AppUpdate],
 })
 export class AppModule {}

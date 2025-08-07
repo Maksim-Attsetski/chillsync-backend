@@ -1,0 +1,58 @@
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
+
+import { Errors, IQuery, MongoUtils } from 'src/utils';
+
+import { CreateMovieDto } from './dto/create-movie.dto';
+import { UpdateMovieDto } from './dto/update-movie.dto';
+import { Movie, MovieDocument } from './movies.entity';
+import { GetMovieDto } from './dto/get-movie.dto';
+
+@Injectable()
+export class MovieService {
+  constructor(
+    @InjectModel(Movie.name) private movieModel: Model<MovieDocument>,
+  ) {}
+
+  async create(createMovieDto: CreateMovieDto) {
+    return await MongoUtils.create({
+      model: this.movieModel,
+      data: { ...createMovieDto },
+    });
+  }
+
+  async findAll(query: IQuery) {
+    return await MongoUtils.getAll({
+      model: this.movieModel,
+      dto: GetMovieDto,
+      query,
+    });
+  }
+
+  async findOne(id: string) {
+    return await MongoUtils.get({
+      model: this.movieModel,
+      error: 'Movie',
+      id,
+      dto: GetMovieDto,
+    });
+  }
+
+  async update(id: string, updateMovieDto: UpdateMovieDto) {
+    return await MongoUtils.update({
+      model: this.movieModel,
+      error: 'Movie',
+      id,
+      data: updateMovieDto,
+    });
+  }
+
+  async remove(id: string) {
+    const item = await this.movieModel.findByIdAndDelete(id);
+
+    if (!item) throw Errors.notFound('Movie');
+
+    return item._id;
+  }
+}
