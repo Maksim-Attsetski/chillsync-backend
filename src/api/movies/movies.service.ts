@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 
 import { Errors, IQuery, MongoUtils } from 'src/utils';
@@ -14,7 +14,7 @@ import { MovieReactionService } from '../movie-reactions';
 export class MovieService {
   constructor(
     @InjectModel(Movie.name) private movieModel: Model<MovieDocument>,
-    @Inject(MovieReactionService)
+    @Inject(forwardRef(() => MovieReactionService))
     private movieReactionService: MovieReactionService,
   ) {}
 

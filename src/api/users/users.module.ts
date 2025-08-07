@@ -6,6 +6,7 @@ import { UsersController } from './users.controller';
 import { Users, UsersSchema } from './users.entity';
 import { AuthModule } from '../auth';
 import { FriendModule } from '../friends';
+import { MovieReactionModule } from '../movie-reactions';
 
 const UserModel = MongooseModule.forFeature([
   { name: Users.name, schema: UsersSchema },
@@ -14,8 +15,9 @@ const UserModel = MongooseModule.forFeature([
 @Module({
   imports: [
     UserModel,
+    forwardRef(() => MovieReactionModule),
     forwardRef(() => AuthModule),
-    forwardRef(() => FriendModule),
+    FriendModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

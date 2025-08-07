@@ -1,5 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersModule } from 'src/api';
@@ -13,13 +13,9 @@ export const TokenModel = MongooseModule.forFeature([
 ]);
 
 @Module({
-  imports: [
-    forwardRef(() => JwtModule),
-    forwardRef(() => TokenModel),
-    forwardRef(() => UsersModule),
-  ],
+  imports: [JwtModule, TokenModel, forwardRef(() => UsersModule)],
   controllers: [AuthController],
-  providers: [AuthService, JwtService],
+  providers: [AuthService],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

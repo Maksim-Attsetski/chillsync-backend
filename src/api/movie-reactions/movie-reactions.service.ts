@@ -49,7 +49,11 @@ export class MovieReactionService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, isUserId: boolean = false) {
+    if (isUserId) {
+      await this.movieReactionModel.deleteMany({ user_id: id });
+      return 'success';
+    }
     const item = await this.movieReactionModel.findByIdAndDelete(id);
 
     if (!item) throw Errors.notFound('Movie reaction');

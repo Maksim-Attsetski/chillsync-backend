@@ -11,6 +11,7 @@ import { Users, UsersDocument } from './users.entity';
 import { AuthService } from '../auth';
 import { ERoles } from './dto/create-user.dto';
 import { FriendService } from '../friends';
+import { MovieReactionService } from '../movie-reactions';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +20,8 @@ export class UsersService {
     @Inject(forwardRef(() => AuthService)) private authService: AuthService,
     @Inject(forwardRef(() => FriendService))
     private friendService: FriendService,
+    @Inject(forwardRef(() => MovieReactionService))
+    private movieReactionService: MovieReactionService,
   ) {}
 
   async findAll(query: IQuery) {
@@ -86,6 +89,7 @@ export class UsersService {
     await this.authService.deleteToken({ userID: id });
 
     await this.friendService.remove(id, true);
+    await this.movieReactionService.remove(id, true);
 
     return await MongoUtils.delete({
       model: this.userModel,
