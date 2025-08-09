@@ -10,7 +10,7 @@ class Config {
     this.isDev = !node_env || node_env === 'development';
     this.corsOptions = {
       credentials: true,
-      origin: ['http://localhost:3000'],
+      origin: ['http://localhost:3000', 'exp://192.168.1.6:8081'],
     };
     this.accessSecret = 'accessSecret';
     this.refreshSecret = 'refreshSecret';
