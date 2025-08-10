@@ -13,9 +13,10 @@ export class TmdbService {
     this.baseUrl = 'https://api.themoviedb.org/3/';
   }
 
-  async axios<T = any>(url: string) {
+  async axios<T = any>(url: string, options?: any) {
     const response = await firstValueFrom(
       this.httpService.get(url, {
+        ...(options ?? {}),
         headers: {
           Accept: 'application/json',
           Authorization: this.api_key,
@@ -61,5 +62,17 @@ export class TmdbService {
 
     const response = await this.axios<TMoviesResponse>(url);
     return response;
+  }
+
+  async getImage(path: string): Promise<{ data: any; headers: any }> {
+    const imageUrl = `https://image.tmdb.org/t/p/w300/${path}`;
+
+    const { data, headers } = await firstValueFrom(
+      this.httpService.get(imageUrl, {
+        responseType: 'arraybuffer',
+        headers: {}, // убираем Accept: application/json
+      }),
+    );
+    return { data, headers };
   }
 }

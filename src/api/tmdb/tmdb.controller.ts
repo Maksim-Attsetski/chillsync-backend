@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 
 import { TmdbService } from './tmdb.service';
 import { TGenreResponse, TMoviesResponse } from './types';
@@ -49,6 +49,18 @@ export class TmdbController {
   @Get('search')
   search(@Query('q') q: string) {
     return this.tmdbService.getMoviesByQuery(q);
+  }
+
+  @Get('image')
+  async getImage(@Query('path') path: string, @Res() res: Response) {
+    const { data, headers } = await this.tmdbService.getImage(path);
+
+    // @ts-ignore
+    res.setHeader('Content-Type', headers['content-type'] || 'image/jpeg');
+    // @ts-ignore
+    res.setHeader('Content-Length', data.length.toString());
+    // @ts-ignore
+    res.end(data); // важно: отправляем бинарный ответ и закрываем поток
   }
 
   @Get(':id')
