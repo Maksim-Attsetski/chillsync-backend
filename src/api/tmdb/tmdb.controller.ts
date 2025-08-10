@@ -52,8 +52,11 @@ export class TmdbController {
   }
 
   @Get('image')
-  async getImage(@Query('path') path: string, @Res() res: Response) {
-    const { data, headers } = await this.tmdbService.getImage(path);
+  async getImage(
+    @Query() query: { w: string; p: string },
+    @Res() res: Response,
+  ) {
+    const { data, headers } = await this.tmdbService.getImage(query);
 
     // @ts-ignore
     res.setHeader('Content-Type', headers['content-type'] || 'image/jpeg');

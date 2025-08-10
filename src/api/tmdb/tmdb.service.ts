@@ -64,13 +64,19 @@ export class TmdbService {
     return response;
   }
 
-  async getImage(path: string): Promise<{ data: any; headers: any }> {
-    const imageUrl = `https://image.tmdb.org/t/p/w300/${path}`;
+  async getImage({
+    p,
+    w,
+  }: {
+    w: string;
+    p: string;
+  }): Promise<{ data: any; headers: any }> {
+    const imageUrl = `https://image.tmdb.org/t/p/w${w}/${p}`;
 
     const { data, headers } = await firstValueFrom(
       this.httpService.get(imageUrl, {
         responseType: 'arraybuffer',
-        headers: {}, // убираем Accept: application/json
+        headers: {},
       }),
     );
     return { data, headers };
