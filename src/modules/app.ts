@@ -13,9 +13,10 @@ import {
   NewsModule,
   PingModule,
   SubscriptionModule,
+  TmdbModule,
+  MovieModule,
+  MovieReactionModule,
 } from 'src/api';
-import { MovieModule } from 'src/api/movies';
-import { MovieReactionModule } from 'src/api/movie-reactions';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MovieReactionModule } from 'src/api/movie-reactions';
     PingModule,
     MovieModule,
     MovieReactionModule,
+    TmdbModule,
   ],
 })
 export class AppModule {}
