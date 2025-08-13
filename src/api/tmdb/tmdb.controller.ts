@@ -61,7 +61,7 @@ export class TmdbController {
     // @ts-ignore
     res.setHeader('Content-Type', headers['content-type'] || 'image/jpeg');
     // @ts-ignore
-    res.setHeader('Content-Length', data.length.toString());
+    res.setHeader('Content-Length', data?.length?.toString?.());
     // @ts-ignore
     res.end(data); // важно: отправляем бинарный ответ и закрываем поток
   }

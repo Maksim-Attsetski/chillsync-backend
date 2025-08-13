@@ -22,9 +22,7 @@ export class ParsedTokenPipe implements PipeTransform {
     try {
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
-        console.log(token);
         const data = this.jwtService.decode(token);
-        console.log('data', data);
 
         return data;
       }

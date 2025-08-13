@@ -71,7 +71,7 @@ export class TmdbService {
     w: string;
     p: string;
   }): Promise<{ data: any; headers: any }> {
-    const imageUrl = `https://image.tmdb.org/t/p/w${w}/${p}`;
+    const imageUrl = `https://image.tmdb.org/t/p/w${w}${p.startsWith('/') ? p : '/' + p}`;
 
     const { data, headers } = await firstValueFrom(
       this.httpService.get(imageUrl, {
