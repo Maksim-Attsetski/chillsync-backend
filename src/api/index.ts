@@ -4,6 +4,7 @@ export * from './friends';
 export * from './news';
 export * from './ping';
 export * from './subscriptions';
+export * from './user-subs';
 export * from './movies';
 export * from './movie-reactions';
 export * from './tmdb';

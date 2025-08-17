@@ -16,6 +16,7 @@ import {
   TmdbModule,
   MovieModule,
   MovieReactionModule,
+  UserSubsModule,
 } from 'src/api';
 
 @Module({
@@ -37,6 +38,7 @@ import {
     MovieModule,
     MovieReactionModule,
     TmdbModule,
+    UserSubsModule,
   ],
 })
 export class AppModule {}
