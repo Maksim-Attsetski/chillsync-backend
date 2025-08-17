@@ -1,11 +1,12 @@
 import { HydratedDocument } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ERoles } from './dto/create-user.dto';
+import { Base } from 'src/types';
 
 export type UsersDocument = HydratedDocument<Users>;
 
 @Schema()
-export class Users {
+export class Users extends Base {
   @Prop({ required: true, unique: true })
   public_id: string;
 
@@ -35,12 +36,6 @@ export class Users {
 
   @Prop({ default: null })
   blocked_at: number;
-
-  @Prop({ default: null })
-  updated_at: number;
-
-  @Prop()
-  createdAt: number;
 
   @Prop({ default: ['pass'] })
   providers: ['pass' | 'google'];
