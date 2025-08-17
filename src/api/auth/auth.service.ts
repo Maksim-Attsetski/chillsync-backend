@@ -166,13 +166,13 @@ export class AuthService {
   }
 
   async getToken(
+    userAgent: string,
     refreshToken?: string,
     accessToken?: string,
   ): Promise<TokenDocument | null> {
     try {
-      return await this.tokenModel.findOne({
-        refreshToken: refreshToken ?? accessToken,
-      });
+      const token = userAgent.includes('okhttp') ? accessToken : refreshToken;
+      return await this.tokenModel.findOne({ refreshToken: token });
     } catch (error) {
       return null;
     }
@@ -188,7 +188,7 @@ export class AuthService {
     }
     const tokenIsValid = await this.validateToken(refreshToken, true);
     const accessTokenIsValid = await this.validateToken(accessToken);
-    const tokenData = await this.getToken(refreshToken, accessToken);
+    const tokenData = await this.getToken(userAgent, refreshToken, accessToken);
 
     if (!tokenData || !(tokenIsValid || accessTokenIsValid)) {
       throw Errors.unauthorized();
@@ -196,7 +196,7 @@ export class AuthService {
 
     const user = await this.usersModel
       .findById(tokenData.userID)
-      .populate(Object.keys(new GetUserDto(undefined)));
+      .populate(Object.keys(new GetUserDto()));
     const tokens = await this.generateAndSaveTokens(user, userAgent);
 
     return { tokens, user };
