@@ -52,13 +52,20 @@ export class TmdbService {
 
   async movieDetails(id: string) {
     const url = `${this.baseUrl}movie/${id}?language=ru-RU&page=1`;
-    const videoUrl = `${this.baseUrl}movie/${id}/videos?language=ru-RU`;
-    const [res, videoRes] = await Promise.all([
+    const videoUrl = `${this.baseUrl}movie/${id}/videos?language=`;
+    const [res, videoRes, enVideoRes] = await Promise.all([
       this.axios<IMovie>(url),
-      this.axios<{ results: any[] }>(videoUrl),
+      this.axios<{ results: any[] }>(videoUrl + 'ru-RU'),
+      this.axios<{ results: any[] }>(videoUrl + 'en-US'),
     ]);
 
-    return { ...res, videos: videoRes?.results ?? [] };
+    return {
+      ...res,
+      videos: [
+        ...(videoRes?.results ?? []),
+        ...(enVideoRes?.results ?? []),
+      ].filter((v) => v.type === 'Trailer'),
+    };
   }
 
   async getRecommendations(id: string) {
