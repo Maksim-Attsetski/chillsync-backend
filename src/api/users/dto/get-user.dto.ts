@@ -1,6 +1,7 @@
+import { IBase } from 'src/types';
 import { ERoles } from './create-user.dto';
 
-export class GetUserDto {
+export class GetUserDto implements IBase {
   _id: string;
   createdAt: number;
   email: string;
@@ -11,11 +12,11 @@ export class GetUserDto {
   public_id: string;
   role: ERoles;
   providers: string[];
-  blocked_at: number | null;
-  updated_at: number | null;
+  blockedAt: number | null;
+  updatedAt: number | null;
   avatar: string | null;
 
-  constructor(model?: Omit<GetUserDto, 'password'>) {
+  constructor(model?: Omit<GetUserDto, 'password'> & IBase) {
     this._id = model?._id ?? '';
     this.createdAt = model?.createdAt ?? 0;
     this.email = model?.email ?? '';
@@ -26,8 +27,8 @@ export class GetUserDto {
     this.role = model?.role ?? ERoles.USER;
     this.location = model?.location ?? [0, 0];
     this.providers = model?.providers ?? [];
-    this.blocked_at = model?.blocked_at ?? 0;
-    this.updated_at = model?.updated_at ?? 0;
+    this.blockedAt = model?.blockedAt ?? 0;
+    this.updatedAt = model?.updatedAt ?? null;
     this.avatar = model?.avatar ?? null;
   }
 }

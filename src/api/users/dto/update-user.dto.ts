@@ -5,6 +5,5 @@ export class UpdateUserDto extends CreateUserDto {
   role: ERoles;
   providers: string[];
   avatar: string | null;
-  blocked_at: number | null;
-  updated_at: number | null;
+  blockedAt: number | null;
 }

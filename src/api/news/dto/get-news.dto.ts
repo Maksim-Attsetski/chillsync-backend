@@ -1,17 +1,14 @@
+import { Base } from 'src/types';
 import { UpdateNewsDto } from './update-news.dto';
 
-export class GetNewsDto extends UpdateNewsDto {
+type TDto = UpdateNewsDto & Base;
+
+export class GetNewsDto implements TDto {
+  title?: string;
+  tag?: string;
+  preview?: string;
+  updatedAt: number;
   _id: string;
   createdAt: number;
-
-  constructor(model: GetNewsDto) {
-    super();
-
-    this.title = model?.title;
-    this.description = model?.description;
-    this.preview = model?.preview;
-    this.tag = model?.tag;
-    this._id = model?._id;
-    this.createdAt = model?.createdAt;
-  }
+  description?: string;
 }

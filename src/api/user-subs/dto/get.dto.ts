@@ -1,16 +1,13 @@
+import { IBase } from 'src/types';
 import { UpdateUserSubDto } from './update.dto';
 
-export class GetUserSubDto extends UpdateUserSubDto {
+type TDto = UpdateUserSubDto & IBase;
+
+export class GetUserSubDto implements TDto {
   _id: string;
   createdAt: number;
-
-  constructor(model: GetUserSubDto) {
-    super();
-
-    this.subId = model?.subId;
-    this.userId = model?.userId;
-    this.expitedAt = model?.expitedAt;
-    this._id = model?._id;
-    this.createdAt = model?.createdAt;
-  }
+  subId?: string | undefined;
+  userId?: string | undefined;
+  expitedAt?: number | undefined;
+  updatedAt: number;
 }

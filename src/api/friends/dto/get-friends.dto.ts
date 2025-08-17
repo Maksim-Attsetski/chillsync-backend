@@ -1,17 +1,13 @@
+import { Base } from 'src/types';
 import { UpdateFriendDto } from './update-friends.dto';
 
-export class GetFriendDto extends UpdateFriendDto {
+type TDto = UpdateFriendDto & Base;
+
+export class GetFriendDto implements TDto {
+  user_ids?: string[];
+  waiter?: string;
+  message?: string;
+  updatedAt: number;
   _id: string;
   createdAt: number;
-
-  constructor(model: GetFriendDto) {
-    super();
-
-    this.user_ids = model?.user_ids;
-    this.message = model?.message;
-    this.waiter = model?.waiter;
-
-    this._id = model?._id;
-    this.createdAt = model?.createdAt;
-  }
 }

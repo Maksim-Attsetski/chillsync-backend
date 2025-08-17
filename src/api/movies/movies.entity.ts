@@ -1,10 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { Base } from 'src/types';
 
 export type MovieDocument = HydratedDocument<Movie>;
 
 @Schema()
-export class Movie {
+export class Movie extends Base {
   @Prop({ required: true })
   title: string;
 
@@ -28,9 +29,6 @@ export class Movie {
 
   @Prop({ required: true })
   vote_count: number;
-
-  @Prop()
-  createdAt: number;
 }
 
 export const MovieSchema = SchemaFactory.createForClass(Movie);

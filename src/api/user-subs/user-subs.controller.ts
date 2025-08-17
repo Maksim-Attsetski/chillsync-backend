@@ -36,7 +36,7 @@ export class UserSubsController {
     return this.subsService.findOne(id);
   }
 
-  @UseGuards(IsAdminGuard)
+  // @UseGuards(IsAdminGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdateSubsDto) {
     return this.subsService.update(id, updateDto);

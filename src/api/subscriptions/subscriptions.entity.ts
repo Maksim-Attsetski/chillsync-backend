@@ -1,10 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { Base } from 'src/types';
 
 export type subscriptionDocument = HydratedDocument<Subscription>;
 
 @Schema()
-export class Subscription {
+export class Subscription extends Base {
   @Prop({ required: true, unique: true })
   name: string;
 
@@ -26,9 +27,6 @@ export class Subscription {
     description: string;
     icon: string;
   }[];
-
-  @Prop()
-  createdAt: number;
 }
 
 export const SubscriptionSchema = SchemaFactory.createForClass(Subscription);

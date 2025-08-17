@@ -2,11 +2,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Users } from '../users';
 import { Subscription } from '../subscriptions';
+import { Base } from 'src/types';
 
 export type userSubDocument = HydratedDocument<UserSubscription>;
 
 @Schema()
-export class UserSubscription {
+export class UserSubscription extends Base {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscription',
@@ -24,9 +25,6 @@ export class UserSubscription {
 
   @Prop({ required: true })
   expitedAt: number;
-
-  @Prop()
-  createdAt: number;
 }
 
 export const UserSubSchema = SchemaFactory.createForClass(UserSubscription);

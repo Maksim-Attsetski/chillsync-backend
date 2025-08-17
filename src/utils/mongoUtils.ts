@@ -58,7 +58,11 @@ class MongoUtils {
 
   async update({ model, id, data, dto, error, populate }: IProps) {
     try {
-      const item = await model.findByIdAndUpdate(id, data, { new: true });
+      const item = await model.findByIdAndUpdate(
+        id,
+        { ...data, updatedAt: Date.now() },
+        { new: true },
+      );
 
       if (!item) throw Errors.notFound(error);
       return dto

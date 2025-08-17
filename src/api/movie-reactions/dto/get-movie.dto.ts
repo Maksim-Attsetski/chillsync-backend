@@ -1,16 +1,13 @@
+import { Base } from 'src/types';
 import { UpdateMovieReactionDto } from './update-movie.dto';
 
-export class GetMovieReactionDto extends UpdateMovieReactionDto {
+type TDto = UpdateMovieReactionDto & Base;
+
+export class GetMovieReactionDto implements TDto {
+  movie_id?: string;
+  user_id?: string;
+  reaction?: string;
+  updatedAt: number;
   _id: string;
   createdAt: number;
-
-  constructor(model: GetMovieReactionDto) {
-    super();
-
-    this.movie_id = model?.movie_id;
-    this.reaction = model?.reaction;
-    this.user_id = model?.user_id;
-    this._id = model?._id;
-    this.createdAt = model?.createdAt;
-  }
 }
