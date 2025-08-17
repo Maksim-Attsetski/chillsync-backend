@@ -48,7 +48,7 @@ export class UsersService {
     return await MongoUtils.update({
       model: this.userModel,
       id,
-      data: { ...updateUserDto, updated_at: Date.now() },
+      data: updateUserDto,
       dto: GetUserDto,
       error: 'User',
     });
@@ -67,7 +67,7 @@ export class UsersService {
 
     const hashPassword = await hash(updateUserDto.new, 7);
     user.password = hashPassword;
-    user.updated_at = Date.now();
+    user.updatedAt = Date.now();
 
     await user.save();
     return true;
@@ -79,7 +79,7 @@ export class UsersService {
     if (!user) throw Errors.notFound('user');
 
     user.role = updateUserDto.role;
-    user.updated_at = Date.now();
+    user.updatedAt = Date.now();
 
     await user.save();
     return true;
