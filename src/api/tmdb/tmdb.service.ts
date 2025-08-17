@@ -52,9 +52,13 @@ export class TmdbService {
 
   async movieDetails(id: string) {
     const url = `${this.baseUrl}movie/${id}?language=ru-RU&page=1`;
+    const videoUrl = `${this.baseUrl}movie/${id}/videos?language=ru-RU`;
+    const [res, videoRes] = await Promise.all([
+      this.axios<IMovie>(url),
+      this.axios<{ results: any[] }>(videoUrl),
+    ]);
 
-    const response = await this.axios<IMovie>(url);
-    return response;
+    return { ...res, videos: videoRes?.results ?? [] };
   }
 
   async getRecommendations(id: string) {
