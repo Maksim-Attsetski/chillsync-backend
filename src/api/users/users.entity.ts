@@ -35,7 +35,7 @@ export class Users extends Base {
   avatar: string;
 
   @Prop({ default: null })
-  blocked_at: number;
+  blockedAt: number;
 
   @Prop({ default: ['pass'] })
   providers: ['pass' | 'google'];
