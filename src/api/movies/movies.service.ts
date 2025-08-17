@@ -8,12 +8,17 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie, MovieDocument } from './movies.entity';
 import { GetMovieDto } from './dto/get-movie.dto';
-import { MovieReactionService } from '../movie-reactions';
+import {
+  MovieReactionDocument,
+  MovieReactionService,
+} from '../movie-reactions';
 
 @Injectable()
 export class MovieService {
   constructor(
     @InjectModel(Movie.name) private movieModel: Model<MovieDocument>,
+    @InjectModel('MovieReaction')
+    private movieReactionModel: Model<MovieReactionDocument>,
     @Inject(forwardRef(() => MovieReactionService))
     private movieReactionService: MovieReactionService,
   ) {}
@@ -41,6 +46,43 @@ export class MovieService {
     }
 
     return id;
+  }
+
+  async createMany(dtoList: CreateMovieDto[], userId?: string) {
+    if (!userId) throw Errors.unauthorized();
+
+    const dtoObject = dtoList.reduce(
+      (prev, cur) => ({ ...prev, [cur.id]: cur.reaction }),
+      {} as Record<string, string>,
+    );
+
+    await this.movieModel.bulkWrite(
+      dtoList.map((obj) => ({
+        updateOne: {
+          filter: { title: obj?.title }, // например email
+          update: { $set: obj },
+          upsert: true,
+        },
+      })),
+    );
+
+    const movies = await this.movieModel.find({
+      id: { $in: dtoList.map((d) => d.id) },
+    });
+
+    await this.movieReactionModel.bulkWrite(
+      movies.map((m) => ({
+        insertOne: {
+          document: {
+            movie_id: m._id,
+            user_id: userId,
+            reaction: dtoObject[m.id] ?? 'LIKE',
+          },
+        },
+      })),
+    );
+
+    return await this.movieReactionModel.find({ user_id: userId });
   }
 
   async findAll(query: IQuery) {
@@ -73,6 +115,7 @@ export class MovieService {
     const item = await this.movieModel.findByIdAndDelete(id);
 
     if (!item) throw Errors.notFound('Movie');
+    await this.movieReactionModel.deleteMany({ movie_id: id });
 
     return item._id;
   }

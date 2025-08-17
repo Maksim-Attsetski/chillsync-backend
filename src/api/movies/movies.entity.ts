@@ -6,10 +6,10 @@ export type MovieDocument = HydratedDocument<Movie>;
 
 @Schema()
 export class Movie extends Base {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   title: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   id: number;
 
   @Prop({ required: true })

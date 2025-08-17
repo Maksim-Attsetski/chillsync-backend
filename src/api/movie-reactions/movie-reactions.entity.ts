@@ -9,10 +9,18 @@ export type MovieReactionDocument = HydratedDocument<MovieReaction>;
 
 @Schema()
 export class MovieReaction extends Base {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Movie', default: null })
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Movie',
+    default: null,
+  })
   movie_id: Movie;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Users', default: null })
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users',
+    default: null,
+  })
   user_id: Users;
 
   @Prop({ required: true })

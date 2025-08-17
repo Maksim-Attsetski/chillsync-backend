@@ -23,6 +23,10 @@ export class MovieReactionService {
     });
   }
 
+  async createMany(createDto: CreateMovieReactionDto[]) {
+    return await this.movieReactionModel.insertMany(createDto);
+  }
+
   async findAll(query: IQuery) {
     return await MongoUtils.getAll({
       model: this.movieReactionModel,

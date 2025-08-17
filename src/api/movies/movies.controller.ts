@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { MovieService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -14,6 +15,7 @@ import { UpdateMovieDto } from './dto/update-movie.dto';
 import { type IQuery } from 'src/utils';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
 import type { ITokenDto } from '../users';
+import { AuthGuard } from 'src/guards';
 
 @Controller('movies')
 export class MovieController {
@@ -24,7 +26,18 @@ export class MovieController {
     @ParsedToken(ParsedTokenPipe) user: ITokenDto,
     @Body() createMovieDto: CreateMovieDto,
   ) {
+    console.log('single');
     return this.movieService.create(createMovieDto, user._id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('many')
+  async createMany(
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+    @Body() createMovieDto: { list: CreateMovieDto[] },
+  ) {
+    console.log('many', createMovieDto.list, user);
+    return this.movieService.createMany(createMovieDto.list, user?._id);
   }
 
   @Get()
