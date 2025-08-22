@@ -3,14 +3,14 @@ import { Prop, Schema } from '@nestjs/mongoose';
 @Schema()
 export class Base {
   @Prop()
-  createdAt: number;
+  created_at: number;
 
   @Prop({ default: null })
-  updatedAt: number;
+  updated_at: number;
 }
 
 export interface IBase {
-  updatedAt: number | null;
-  createdAt: number;
+  updated_at: number | null;
+  created_at: number;
   _id: string;
 }

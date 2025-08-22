@@ -26,7 +26,6 @@ export class MovieController {
     @ParsedToken(ParsedTokenPipe) user: ITokenDto,
     @Body() createMovieDto: CreateMovieDto,
   ) {
-    console.log('single');
     return this.movieService.create(createMovieDto, user._id);
   }
 
@@ -36,7 +35,6 @@ export class MovieController {
     @ParsedToken(ParsedTokenPipe) user: ITokenDto,
     @Body() createMovieDto: { list: CreateMovieDto[] },
   ) {
-    console.log('many', createMovieDto.list, user);
     return this.movieService.createMany(createMovieDto.list, user?._id);
   }
 

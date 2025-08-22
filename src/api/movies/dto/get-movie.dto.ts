@@ -12,8 +12,8 @@ export class GetMovieDto implements TDto {
   overview?: string;
   vote_average?: number;
   vote_count?: number;
-  updatedAt: number;
+  updated_at: number;
   reaction: string;
   _id: string;
-  createdAt: number;
+  created_at: number;
 }

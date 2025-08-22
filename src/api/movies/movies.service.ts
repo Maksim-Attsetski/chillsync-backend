@@ -27,25 +27,25 @@ export class MovieService {
     { reaction, ...createMovieDto }: CreateMovieDto,
     userId: string,
   ) {
-    const newMovie = await this.movieModel.updateOne(
-      { title: createMovieDto?.title },
-      createMovieDto,
-      {
-        upsert: true,
-      },
+    const newMovie = await this.movieModel.findOneAndUpdate(
+      { title: createMovieDto.title },
+      { $set: { ...createMovieDto } },
+      { upsert: true, new: true },
     );
 
-    const id = newMovie.upsertedId as unknown as string | null;
+    const id = newMovie._id as unknown as string | null;
 
     if (id) {
-      await this.movieReactionService.create({
+      const newReaction = await this.movieReactionService.create({
         movie_id: id,
         user_id: userId,
         reaction,
       });
+
+      return { reaction: newReaction, movie: newMovie };
     }
 
-    return id;
+    return { reaction: null, movie: newMovie };
   }
 
   async createMany(dtoList: CreateMovieDto[], userId?: string) {
@@ -82,7 +82,8 @@ export class MovieService {
       })),
     );
 
-    return await this.movieReactionModel.find({ user_id: userId });
+    const reactions = await this.movieReactionModel.find({ user_id: userId });
+    return { reactions, movies };
   }
 
   async findAll(query: IQuery) {

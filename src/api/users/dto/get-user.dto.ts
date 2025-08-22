@@ -3,7 +3,7 @@ import { ERoles } from './create-user.dto';
 
 export class GetUserDto implements IBase {
   _id: string;
-  createdAt: number;
+  created_at: number;
   email: string;
   first_name: string;
   last_name: string;
@@ -13,12 +13,12 @@ export class GetUserDto implements IBase {
   role: ERoles;
   providers: string[];
   blockedAt: number | null;
-  updatedAt: number | null;
+  updated_at: number | null;
   avatar: string | null;
 
   constructor(model?: Omit<GetUserDto, 'password'> & IBase) {
     this._id = model?._id ?? '';
-    this.createdAt = model?.createdAt ?? 0;
+    this.created_at = model?.created_at ?? 0;
     this.email = model?.email ?? '';
     this.first_name = model?.first_name ?? '';
     this.last_name = model?.last_name ?? '';
@@ -28,7 +28,7 @@ export class GetUserDto implements IBase {
     this.location = model?.location ?? [0, 0];
     this.providers = model?.providers ?? [];
     this.blockedAt = model?.blockedAt ?? 0;
-    this.updatedAt = model?.updatedAt ?? null;
+    this.updated_at = model?.updated_at ?? null;
     this.avatar = model?.avatar ?? null;
   }
 }

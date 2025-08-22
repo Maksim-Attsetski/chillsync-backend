@@ -10,7 +10,7 @@ export class GetSubDto implements TDto {
   discount?: number;
   live_time?: number;
   points?: any[];
-  updatedAt: number;
+  updated_at: number;
   _id: string;
-  createdAt: number;
+  created_at: number;
 }

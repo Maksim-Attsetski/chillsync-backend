@@ -5,9 +5,9 @@ type TDto = UpdateUserSubDto & IBase;
 
 export class GetUserSubDto implements TDto {
   _id: string;
-  createdAt: number;
+  created_at: number;
   subId?: string | undefined;
   userId?: string | undefined;
   expitedAt?: number | undefined;
-  updatedAt: number;
+  updated_at: number;
 }

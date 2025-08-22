@@ -39,7 +39,7 @@ export class AuthService {
       password,
       providers,
       public_id: v4(),
-      createdAt: Date.now(),
+      created_at: Date.now(),
     });
 
     return createdUser;
@@ -77,7 +77,7 @@ export class AuthService {
         email: userData?.email,
         name: userData?.name || '',
         providers: ['google'],
-        createdAt: Date.now(),
+        created_at: Date.now(),
       });
     }
 

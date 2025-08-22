@@ -45,7 +45,7 @@ class MongoUtils {
       const item = findParams ? await model.findOne(findParams) : null;
 
       if (item) throw Errors.badRequest(error);
-      const newItem = await model.create({ ...data, createdAt: Date.now() });
+      const newItem = await model.create({ ...data, created_at: Date.now() });
 
       return dto ? await newItem.populate(Object.keys(new dto())) : newItem;
     } catch (error) {
@@ -60,7 +60,7 @@ class MongoUtils {
     try {
       const item = await model.findByIdAndUpdate(
         id,
-        { ...data, updatedAt: Date.now() },
+        { ...data, updated_at: Date.now() },
         { new: true },
       );
 

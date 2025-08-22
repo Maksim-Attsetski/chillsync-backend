@@ -67,7 +67,7 @@ export class UsersService {
 
     const hashPassword = await hash(updateUserDto.new, 7);
     user.password = hashPassword;
-    user.updatedAt = Date.now();
+    user.updated_at = Date.now();
 
     await user.save();
     return true;
@@ -79,7 +79,7 @@ export class UsersService {
     if (!user) throw Errors.notFound('user');
 
     user.role = updateUserDto.role;
-    user.updatedAt = Date.now();
+    user.updated_at = Date.now();
 
     await user.save();
     return true;

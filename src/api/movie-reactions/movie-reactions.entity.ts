@@ -25,6 +25,12 @@ export class MovieReaction extends Base {
 
   @Prop({ required: true })
   reaction: string;
+
+  @Prop({ default: 0 })
+  rating: number;
+
+  @Prop({ default: null })
+  viewed_at: number;
 }
 
 export const MovieReactionSchema = SchemaFactory.createForClass(MovieReaction);

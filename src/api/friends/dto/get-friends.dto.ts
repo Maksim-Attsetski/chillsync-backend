@@ -7,7 +7,7 @@ export class GetFriendDto implements TDto {
   user_ids?: string[];
   waiter?: string;
   message?: string;
-  updatedAt: number;
+  updated_at: number;
   _id: string;
-  createdAt: number;
+  created_at: number;
 }

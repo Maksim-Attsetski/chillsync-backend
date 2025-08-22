@@ -31,7 +31,7 @@ export class MovieReactionController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.movieReactionService.remove(id);
+  remove(@Param('id') id: string, @Query() user: { is_user: boolean }) {
+    return this.movieReactionService.remove(id, !!user?.is_user);
   }
 }
