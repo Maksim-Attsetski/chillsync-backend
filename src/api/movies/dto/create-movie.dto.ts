@@ -8,4 +8,5 @@ export class CreateMovieDto {
   vote_average: number;
   vote_count: number;
   reaction: string;
+  release_date: string;
 }

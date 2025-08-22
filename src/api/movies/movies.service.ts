@@ -56,19 +56,7 @@ export class MovieService {
       {} as Record<string, string>,
     );
 
-    await this.movieModel.bulkWrite(
-      dtoList.map((obj) => ({
-        updateOne: {
-          filter: { title: obj?.title }, // например email
-          update: { $set: obj },
-          upsert: true,
-        },
-      })),
-    );
-
-    const movies = await this.movieModel.find({
-      id: { $in: dtoList.map((d) => d.id) },
-    });
+    const movies = await this.createManyMovies(dtoList);
 
     await this.movieReactionModel.bulkWrite(
       movies.map((m) => ({
@@ -84,6 +72,22 @@ export class MovieService {
 
     const reactions = await this.movieReactionModel.find({ user_id: userId });
     return { reactions, movies };
+  }
+  async createManyMovies(dtoList: CreateMovieDto[]) {
+    await this.movieModel.bulkWrite(
+      dtoList.map((obj) => ({
+        updateOne: {
+          filter: { id: obj?.id }, // например email
+          update: { $set: obj },
+          upsert: true,
+        },
+      })),
+    );
+
+    const movies = await this.movieModel.find({
+      id: { $in: dtoList.map((d) => d.id) },
+    });
+    return movies;
   }
 
   async findAll(query: IQuery) {

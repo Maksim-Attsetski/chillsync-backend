@@ -1,10 +1,11 @@
-import { Controller, Get, Param, Query, Res } from '@nestjs/common';
+import { Controller, Get, Param, Query, Res, UseGuards } from '@nestjs/common';
 
 import { type ITmdbParams, TmdbService } from './tmdb.service';
 import { TGenreResponse, TMoviesResponse } from './types';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
 import { type ITokenDto } from '../users';
 import { Errors } from 'src/utils';
+import { AuthGuard } from 'src/guards';
 
 interface ICache<T> {
   expireAt: number;
@@ -21,6 +22,7 @@ export class TmdbController {
     this.genresCache = new Map();
   }
 
+  @UseGuards(AuthGuard)
   @Get('me')
   async getMoviesForMe(
     @ParsedToken(ParsedTokenPipe) user: ITokenDto,

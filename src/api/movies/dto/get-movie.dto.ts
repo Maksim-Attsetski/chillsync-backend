@@ -16,4 +16,5 @@ export class GetMovieDto implements TDto {
   reaction: string;
   _id: string;
   created_at: number;
+  release_date?: string;
 }
