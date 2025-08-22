@@ -1,7 +1,10 @@
 import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 
-import { TmdbService } from './tmdb.service';
+import { type ITmdbParams, TmdbService } from './tmdb.service';
 import { TGenreResponse, TMoviesResponse } from './types';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { type ITokenDto } from '../users';
+import { Errors } from 'src/utils';
 
 interface ICache<T> {
   expireAt: number;
@@ -18,13 +21,24 @@ export class TmdbController {
     this.genresCache = new Map();
   }
 
+  @Get('me')
+  async getMoviesForMe(
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+    @Query() query: ITmdbParams,
+  ) {
+    if (!user?._id) throw Errors.unauthorized();
+
+    const response = await this.tmdbService.getMoviesForMe(user._id, query);
+    return response;
+  }
+
   @Get('popular')
-  async getPopularMovies() {
+  async getPopularMovies(@Query() query: ITmdbParams) {
     const cache = this.popularCache.get('popular');
     if (cache && cache.expireAt > Date.now()) {
       return cache.data;
     }
-    const response = await this.tmdbService.getPopularMovies();
+    const response = await this.tmdbService.getPopularMovies(query);
     this.popularCache.set('popular', {
       expireAt: Date.now() + 360_000 * 24,
       data: response,

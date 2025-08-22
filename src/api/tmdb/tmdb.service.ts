@@ -2,13 +2,28 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { IMovie, TGenreResponse, TMoviesResponse } from './types';
+import { InjectModel } from '@nestjs/mongoose';
+import { Movie, MovieDocument } from '../movies';
+import { Model } from 'mongoose';
+import { MovieReactionDocument } from '../movie-reactions';
+
+export interface ITmdbParams {
+  include_adult?: boolean;
+  language?: string;
+  page?: number;
+}
 
 @Injectable()
 export class TmdbService {
   private api_key: string;
   private baseUrl: string;
 
-  constructor(private readonly httpService: HttpService) {
+  constructor(
+    private readonly httpService: HttpService,
+    @InjectModel(Movie.name) private movieModel: Model<MovieDocument>,
+    @InjectModel('MovieReaction')
+    private movieReactionModel: Model<MovieReactionDocument>,
+  ) {
     this.api_key = `Bearer ${process.env.TMDB_KEY}`;
     this.baseUrl = 'https://api.themoviedb.org/3/';
   }
@@ -26,10 +41,19 @@ export class TmdbService {
     return response.data as T;
   }
 
-  async getPopularMovies() {
+  async getMoviesForMe(userId: string, query: ITmdbParams) {
+    const response = await this.getPopularMovies(query);
+    return response;
+  }
+
+  async getPopularMovies({
+    include_adult = false,
+    language = 'ru-RU',
+    page = 1,
+  }: ITmdbParams) {
     const url =
       this.baseUrl +
-      'discover/movie?include_adult=false&include_video=false&language=ru-RU&page=1&sort_by=popularity.desc&release_date.gte=2000-01-01&vote_average.gte=2.5&with_runtime.gte=60';
+      `discover/movie?include_adult=${include_adult}&include_video=false&language=${language}&page=${page}&sort_by=popularity.desc&release_date.gte=2000-01-01&vote_average.gte=2.5&with_runtime.gte=60`;
 
     const response = await this.axios<TMoviesResponse>(url);
     return response;
