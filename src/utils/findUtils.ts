@@ -142,7 +142,9 @@ class FindUtils {
 
     currentQuery.limit = query?.limit || 10;
     currentQuery.page = (page > 1 ? page - 1 : 0) * currentQuery.limit;
-    currentQuery.dependencies = JSON.parse(`${dependencies}`);
+    currentQuery.dependencies = Array.isArray(dependencies)
+      ? dependencies
+      : JSON.parse(`${dependencies}`);
 
     return currentQuery;
   }
