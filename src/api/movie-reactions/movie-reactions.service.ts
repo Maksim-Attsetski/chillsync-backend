@@ -8,12 +8,15 @@ import { CreateMovieReactionDto } from './dto/create-movie-reaction.dto';
 import { UpdateMovieReactionDto } from './dto/update-movie.dto';
 import { MovieReaction, MovieReactionDocument } from './movie-reactions.entity';
 import { GetMovieReactionDto } from './dto/get-movie.dto';
+import { Friend, FriendDocument } from '../friends';
 
 @Injectable()
 export class MovieReactionService {
   constructor(
     @InjectModel(MovieReaction.name)
     private movieReactionModel: Model<MovieReactionDocument>,
+    @InjectModel(Friend.name)
+    private friendModel: Model<FriendDocument>,
   ) {}
 
   async create(createDto: CreateMovieReactionDto) {
@@ -28,6 +31,18 @@ export class MovieReactionService {
   }
 
   async findAll(query: IQuery) {
+    return await MongoUtils.getAll({
+      model: this.movieReactionModel,
+      dto: GetMovieReactionDto,
+      query,
+    });
+  }
+
+  async findFriendsReactions(query: IQuery, userId: string) {
+    const friends = await this.friendModel.find({ user_ids: { $in: userId } });
+
+    query.filter = `user_id_in_${friends.map((f) => (f.user_ids as unknown as string[]).at((f.user_ids as unknown as string[]).at(0) === userId ? 0 : 1)).join(',')}`;
+
     return await MongoUtils.getAll({
       model: this.movieReactionModel,
       dto: GetMovieReactionDto,

@@ -6,11 +6,16 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { MovieReactionService } from './movie-reactions.service';
 import { UpdateMovieReactionDto } from './dto/update-movie.dto';
-import { type IQuery } from 'src/utils';
+import { Errors, type IQuery } from 'src/utils';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { type ITokenDto } from '../users';
+import { AuthGuard } from 'src/guards';
 
+@UseGuards(AuthGuard)
 @Controller('movie-reactions')
 export class MovieReactionController {
   constructor(private readonly movieReactionService: MovieReactionService) {}
@@ -18,6 +23,12 @@ export class MovieReactionController {
   @Get()
   findAll(@Query() query: IQuery) {
     return this.movieReactionService.findAll(query);
+  }
+
+  @Get('friends')
+  findFriendsReactions(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
+    if (!user?._id) throw Errors.unauthorized();
+    return this.movieReactionService.findFriendsReactions({}, user?._id);
   }
 
   @Get(':id')
