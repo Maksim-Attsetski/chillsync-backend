@@ -12,7 +12,7 @@ import {
 import { MovieService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { type IQuery } from 'src/utils';
+import { Errors, type IQuery } from 'src/utils';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
 import type { ITokenDto } from '../users';
 import { AuthGuard } from 'src/guards';
@@ -39,8 +39,19 @@ export class MovieController {
   }
 
   @Get()
-  findAll(@Query() query: IQuery, @ParsedToken(ParsedTokenPipe) user: any) {
+  findAll(
+    @Query() query: IQuery,
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+  ) {
     return this.movieService.findAll(query);
+  }
+  @Get('for-me')
+  findMoviesForMe(
+    @Query() query: IQuery,
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+  ) {
+    if (!user?._id) throw Errors.unauthorized();
+    return this.movieService.findMoviesForMe(query, user._id);
   }
 
   @Get(':id')

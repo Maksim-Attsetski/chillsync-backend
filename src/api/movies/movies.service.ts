@@ -98,6 +98,25 @@ export class MovieService {
     });
   }
 
+  async findMoviesForMe(query: IQuery, userId: string) {
+    const userReactions = await this.movieReactionModel.find({
+      user_id: userId,
+    });
+
+    const newFilter = `_id_not_in_${userReactions.map((r) => r.movie_id).join(',')}`;
+    if (query?.filter) {
+      query.filter = query.filter + ';' + newFilter;
+    } else {
+      query.filter = newFilter;
+    }
+
+    return await MongoUtils.getAll({
+      model: this.movieModel,
+      dto: GetMovieDto,
+      query,
+    });
+  }
+
   async findOne(id: string) {
     return await MongoUtils.get({
       model: this.movieModel,
