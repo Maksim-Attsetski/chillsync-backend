@@ -13,6 +13,7 @@ import { AuthGuard, IsAdminGuard } from 'src/guards';
 
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ERoles } from './dto/create-user.dto';
 
 @UseGuards(AuthGuard)
 @Controller('users')
@@ -31,11 +32,8 @@ export class UsersController {
 
   @UseGuards(IsAdminGuard)
   @Patch(':id/role')
-  updateRole(
-    @Param('id') id: string,
-    @Body() updateUserDto: { last: string; new: string },
-  ) {
-    return this.usersService.updatePassword(id, updateUserDto);
+  updateRole(@Param('id') id: string, @Body() updateUserDto: { role: ERoles }) {
+    return this.usersService.updateRole(id, updateUserDto);
   }
 
   @Patch(':id/password')

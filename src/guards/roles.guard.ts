@@ -12,12 +12,7 @@ class RolesGuard implements CanActivate {
   ): Promise<boolean> {
     if (token) {
       const res = await this.authService.validateToken(token, isRefresh);
-
-      if (!!res) {
-        const tokenData = await this.authService.getToken(token);
-        const fullData = await tokenData?.populate('userID');
-        return (fullData?.userID?.role as any) === role;
-      }
+      if (!!res) return res?.role === role;
     }
     return false;
   }

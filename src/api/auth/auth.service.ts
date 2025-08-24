@@ -12,6 +12,7 @@ import {
   Users,
   UsersDocument,
   GetUserDto,
+  ITokenDto,
 } from 'src/api';
 import { Token, TokenDocument } from './auth.entity';
 import { v4 } from 'uuid';
@@ -109,13 +110,13 @@ export class AuthService {
     return { user, tokens };
   }
 
-  async generateTokens({ _id, email }: UsersDocument): Promise<ITokens> {
+  async generateTokens({ _id, email, role }: UsersDocument): Promise<ITokens> {
     const accessToken = this.jwtService.sign(
-      { email, _id },
+      { email, _id, role },
       { expiresIn: '15m', secret: Config.accessSecret },
     );
     const refreshToken = this.jwtService.sign(
-      { email, _id },
+      { email, _id, role },
       { expiresIn: '30d', secret: Config.refreshSecret },
     );
 
@@ -155,13 +156,16 @@ export class AuthService {
     await this.tokenModel.findOneAndDelete(obj);
   }
 
-  async validateToken(token: string, isRefresh?: boolean) {
+  async validateToken(
+    token: string,
+    isRefresh?: boolean,
+  ): Promise<ITokenDto | null> {
     try {
-      return await this.jwtService.verifyAsync(token, {
+      return await this.jwtService.verifyAsync<ITokenDto>(token, {
         secret: isRefresh ? Config.refreshSecret : Config.accessSecret,
       });
     } catch (error) {
-      return false;
+      return null;
     }
   }
 
