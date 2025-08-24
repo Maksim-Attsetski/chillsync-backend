@@ -28,7 +28,10 @@ export class MovieReactionController {
   @Get('friends')
   findFriendsReactions(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
     if (!user?._id) throw Errors.unauthorized();
-    return this.movieReactionService.findFriendsReactions({}, user?._id);
+    return this.movieReactionService.findFriendsReactions(
+      { dependencies: ['movie_id'] },
+      user?._id,
+    );
   }
 
   @Get(':id')
