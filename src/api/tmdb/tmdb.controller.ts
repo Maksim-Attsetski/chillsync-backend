@@ -5,7 +5,7 @@ import { TGenreResponse, TMoviesResponse } from './types';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
 import { type ITokenDto } from '../users';
 import { Errors } from 'src/utils';
-import { AuthGuard } from 'src/guards';
+import { IsAdminGuard } from 'src/guards';
 
 interface ICache<T> {
   expireAt: number;
@@ -22,7 +22,7 @@ export class TmdbController {
     this.genresCache = new Map();
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(IsAdminGuard)
   @Get('me')
   async getMoviesForMe(
     @ParsedToken(ParsedTokenPipe) user: ITokenDto,
@@ -36,12 +36,13 @@ export class TmdbController {
 
   @Get('popular')
   async getPopularMovies(@Query() query: ITmdbParams) {
-    const cache = this.popularCache.get('popular');
+    const key = `popular:${JSON.stringify(query)}`;
+    const cache = this.popularCache.get(key);
     if (cache && cache.expireAt > Date.now()) {
       return cache.data;
     }
     const response = await this.tmdbService.getPopularMovies(query);
-    this.popularCache.set('popular', {
+    this.popularCache.set(key, {
       expireAt: Date.now() + 360_000 * 24,
       data: response,
     });

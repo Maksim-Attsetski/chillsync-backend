@@ -2,60 +2,74 @@ import { HttpService } from '@nestjs/axios';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { IMovie, TGenreResponse, TMoviesResponse } from './types';
-import { InjectModel } from '@nestjs/mongoose';
-import { CreateMovieDto, Movie, MovieDocument, MovieService } from '../movies';
-import { Model } from 'mongoose';
-import { MovieReactionDocument } from '../movie-reactions';
+import { CreateMovieDto, MovieService } from '../movies';
+
 export interface ITmdbParams {
   include_adult?: boolean;
+  minDur?: number;
+  maxDur?: number;
+  minRate?: number;
   language?: string;
   page?: number;
 }
 
+const year = 2025;
 @Injectable()
 export class TmdbService {
   private api_key: string;
+  private api_key2: string;
   private baseUrl: string;
 
   constructor(
     private readonly httpService: HttpService,
     @Inject(forwardRef(() => MovieService))
     private movieService: MovieService,
-    @InjectModel(Movie.name) private movieModel: Model<MovieDocument>,
-    @InjectModel('MovieReaction')
-    private movieReactionModel: Model<MovieReactionDocument>,
   ) {
     this.api_key = `Bearer ${process.env.TMDB_KEY}`;
+    this.api_key2 = `Bearer ${process.env.TMDB_KEY_2}`;
     this.baseUrl = 'https://api.themoviedb.org/3/';
   }
 
-  async axios<T = any>(url: string, options?: any) {
+  async axios<T = any>(url: string, isSecond: boolean = false, options?: any) {
     const response = await firstValueFrom(
       this.httpService.get(url, {
         ...(options ?? {}),
         headers: {
           Accept: 'application/json',
-          Authorization: this.api_key,
+          Authorization: isSecond ? this.api_key2 : this.api_key,
         },
       }),
     );
     return response.data as T;
   }
 
+  getUrl(
+    { include_adult, language, page, minDur, maxDur, minRate }: ITmdbParams,
+    year: number,
+  ) {
+    return (
+      this.baseUrl +
+      // `discover/movie?include_adult=${include_adult}&include_video=false&language=${language}&page=${page}&release_date.gte=${year}-01-01&release_date.lte=${year}-12-31&sort_by=popularity.desc&vote_average.gte=${minRate}&with_runtime.gte=${minDur}&with_runtime.lte=${maxDur}`
+      `discover/movie?include_adult=${include_adult}&include_video=false&language=${language}&page=${page}&release_date.gte=${year}-01-01&sort_by=popularity.desc&with_runtime.gte=${minDur}&with_runtime.lte=${maxDur}`
+    );
+  }
+
   async fetchMoviesByYear(
     year: number,
-    { include_adult, language }: ITmdbParams,
+    q: ITmdbParams,
+    isSecondary: boolean,
   ): Promise<IMovie[]> {
     let page = 1;
     let results: IMovie[] = [];
     let totalPages = 1;
 
     while (page <= totalPages) {
-      const url =
-        this.baseUrl +
-        `discover/movie?include_adult=${include_adult}&include_video=false&language=${language}&page=${page}&release_date.gte=${year}-01-01&release_date.lte=${year}-12-31&sort_by=popularity.desc&vote_average.gte=3.2&with_runtime.gte=82`;
+      console.log(`📅 Загружаем фильмы, страница ${page} из ${totalPages}`);
 
-      const data = await this.axios<TMoviesResponse>(url);
+      const data = await this.axios<TMoviesResponse>(
+        this.getUrl({ ...q, page }, year),
+        isSecondary,
+      );
 
       await this.movieService.createManyMovies(
         data.results.map(
@@ -86,59 +100,62 @@ export class TmdbService {
     return results;
   }
 
-  async fetchMoviesUntilYear(
-    endYear: number,
-    q: ITmdbParams,
-  ): Promise<IMovie[]> {
-    let allMovies: IMovie[] = [];
-    const startYear: number = endYear;
+  async fetchMoviesUntilYear(endYear: number): Promise<void> {
+    const startYear: number = 2000;
     // const startYear: number = endYear - 1;
 
-    for (let year = startYear; year <= endYear; year++) {
+    for (let year = endYear; year >= startYear; year--) {
       console.log(`📅 Загружаем фильмы за ${year}`);
-      const movies = await this.fetchMoviesByYear(year, q);
-
-      allMovies = [...allMovies, ...movies];
+      await Promise.allSettled([
+        this.fetchMoviesByYear(
+          year,
+          {
+            include_adult: false,
+            language: 'ru-RU',
+            maxDur: 90,
+            minDur: 30,
+            minRate: 3.4,
+          },
+          false,
+        ),
+        this.fetchMoviesByYear(
+          year,
+          {
+            include_adult: false,
+            language: 'ru-RU',
+            maxDur: 200,
+            minDur: 90,
+            minRate: 3.4,
+          },
+          true,
+        ),
+      ]);
 
       // дополнительная пауза между годами
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
-
-    console.log('====================================');
-    console.log(
-      'films',
-      allMovies.map((m) => `${m.title} ${m.release_date}`),
-    );
-    console.log('====================================');
-
-    return allMovies;
   }
 
   async getMoviesForMe(userId: string, query: ITmdbParams) {
-    const res = await this.fetchMoviesUntilYear(2025, query);
-
-    // console.log('====================================');
-    // console.log(res);
-    // console.log('====================================');
-
-    // .findOneAndUpdate(
-    //   { title: createMovieDto.title },
-    //   { $set: { ...createMovieDto } },
-    //   { upsert: true, new: true },
-    // );
-
-    return res;
+    await this.fetchMoviesUntilYear(year);
+    return 'Success';
   }
 
   async getPopularMovies({
     include_adult = false,
     language = 'ru-RU',
     page = 1,
+    minDur = 20,
+    maxDur,
+    minRate = 3,
   }: ITmdbParams) {
+    console.log('====================================');
+    console.log(minDur);
+    console.log('====================================');
     const url =
       this.baseUrl +
-      // `discover/movie?include_adult=${include_adult}&include_video=false&language=${language}&page=${page}&sort_by=popularity.desc&release_date.gte=2026-01-01&release_date.lte=2026-12-31&vote_average.gte=2.5&with_runtime.gte=60`;
-      `discover/movie?include_adult=${include_adult}&include_video=false&language=${language}&page=${page}&release_date.gte=2025-01-01&release_date.lte=2025-12-31&sort_by=popularity.desc&vote_average.gte=3.2&with_runtime.gte=82`;
+      `discover/movie?language=${language}&page=${page}&release_date.gte=2000-01-01&release_date.lte=2025-12-31&sort_by=popularity.desc&vote_average.lte=${minRate}&with_runtime.gte=${minDur}&with_runtime.lte=${maxDur}`;
+    // `discover/movie?include_adult=${include_adult}&include_video=false&language=${language}&page=${page}&release_date.gte=2000-01-01&release_date.lte=2025-12-31&sort_by=popularity.desc&vote_average.gte=${minRate}&with_runtime.gte=${minDur}&with_runtime.lte=${maxDur}`;
 
     const response = await this.axios<TMoviesResponse>(url);
     return response;
@@ -146,7 +163,6 @@ export class TmdbService {
 
   async getMoviesByQuery(query: string) {
     const encodeUri = encodeURIComponent(query);
-    ``;
     const url = `${this.baseUrl}search/movie?query=${encodeUri}&include_adult=false&language=ru-RU&page=1`;
 
     const response = await this.axios<TMoviesResponse>(url);
