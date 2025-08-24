@@ -41,7 +41,7 @@ export class MovieReactionService {
   async findFriendsReactions(query: IQuery, userId: string) {
     const friends = await this.friendModel.find({ user_ids: { $in: userId } });
 
-    query.filter = `user_id_in_${friends.map((f) => (f.user_ids as unknown as string[]).at((f.user_ids as unknown as string[]).at(0) === userId ? 0 : 1)).join(',')}`;
+    query.filter = `user_id_in_${friends.map((f) => (f.user_ids as unknown as string[]).at((f.user_ids as unknown as string[]).at(0) === userId ? 1 : 0)).join(',')}`;
 
     return await MongoUtils.getAll({
       model: this.movieReactionModel,
