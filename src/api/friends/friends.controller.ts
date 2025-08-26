@@ -7,19 +7,27 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { FriendService } from './friends.service';
 import { CreateFriendDto } from './dto/create-friends.dto';
-import { UpdateFriendDto } from './dto/update-friends.dto';
-import { type IQuery } from 'src/utils';
+import { Errors, type IQuery } from 'src/utils';
+import { AuthGuard } from 'src/guards';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { type ITokenDto } from '../users';
 
 @Controller('friends')
 export class FriendController {
   constructor(private readonly friendService: FriendService) {}
 
+  @UseGuards(AuthGuard)
   @Post()
-  async create(@Body() createFriendDto: CreateFriendDto) {
-    return this.friendService.create(createFriendDto);
+  async create(
+    @Body() createFriendDto: CreateFriendDto,
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+  ) {
+    if (!user?._id) throw Errors.unauthorized();
+    return this.friendService.sendRequest(createFriendDto, user._id);
   }
 
   @Get()
@@ -32,9 +40,18 @@ export class FriendController {
     return this.friendService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFriendDto: UpdateFriendDto) {
-    return this.friendService.update(id, updateFriendDto);
+  @Patch('remove/:id')
+  removeFriend(
+    @Param('id') id: string,
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+  ) {
+    if (!user?._id) throw Errors.unauthorized();
+    return this.friendService.removeFriend(id, user?._id);
+  }
+
+  @Patch('accept/:id')
+  acceptRequest(@Param('id') id: string) {
+    return this.friendService.acceptRequest(id);
   }
 
   @Delete(':id')

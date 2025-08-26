@@ -1,5 +1,4 @@
 export class CreateFriendDto {
-  user_ids: string[];
-  waiter: string;
+  user_id: string;
   message: string;
 }

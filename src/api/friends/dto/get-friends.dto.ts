@@ -1,12 +1,8 @@
 import { Base } from 'src/types';
-import { UpdateFriendDto } from './update-friends.dto';
-
-type TDto = UpdateFriendDto & Base;
-
-export class GetFriendDto implements TDto {
+export class GetFriendDto implements Base {
   user_ids?: string[];
-  waiter?: string;
-  message?: string;
+  waiter: string | null;
+  message?: string | null;
   updated_at: number;
   _id: string;
   created_at: number;
