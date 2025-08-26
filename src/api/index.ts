@@ -8,3 +8,4 @@ export * from './user-subs';
 export * from './movies';
 export * from './movie-reactions';
 export * from './tmdb';
+export * from './mail';
