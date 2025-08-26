@@ -10,8 +10,6 @@ export class MailController {
   @UseGuards(AuthGuard)
   @Post()
   async create(@Body() dto: ISendDto) {
-    console.log(dto);
-
     return this.mailService.sendMail(dto);
   }
 }
