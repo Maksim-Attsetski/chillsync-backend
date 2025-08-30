@@ -38,19 +38,6 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async sendEmailIfNewSession(dto: CreateSessionDto, email: string) {
-    await this.mailService.sendMail({
-      to: email,
-      subject: 'Новое устройство',
-      text: '',
-      html: `
-        <p>В ваш аккаунт был совершен вход с нового устройства ${!dto?.device_name || dto?.device_name === 'unknown' ? dto.user_agent : dto?.device_name}</p>
-        <br/>
-        <p>Если это были не вы, зайдите в приложение и срочно смените пароль!</p>
-      `,
-    });
-  }
-
   async createUser(data: SignupDto, password: string, providers: string[]) {
     const createdUser = await this.usersModel.create({
       ...data,
@@ -85,6 +72,11 @@ export class AuthService {
         device_name: device ?? 'unknown',
       },
       createdUser,
+    );
+
+    this.mailService.sendEmailToNewUser(
+      `${dto?.first_name} ${dto.last_name}`,
+      dto?.email,
     );
 
     return { user: createdUser, tokens };
@@ -128,7 +120,7 @@ export class AuthService {
     } as CreateSessionDto;
     const { tokens, isNewSession } =
       await this.sessionsService.generateAndSaveSession(dto, user);
-    isNewSession && this.sendEmailIfNewSession(dto, user?.email);
+    isNewSession && this.mailService.sendEmailIfNewSession(dto, user?.email);
     return { user, tokens };
   }
 
@@ -158,7 +150,7 @@ export class AuthService {
       await this.sessionsService.generateAndSaveSession(dto, user);
 
     if (isNewSession) {
-      await this.sendEmailIfNewSession(dto, user?.email);
+      this.mailService.sendEmailIfNewSession(dto, user?.email);
     }
 
     return { user, tokens };
@@ -203,7 +195,7 @@ export class AuthService {
     console.log('isNewSession', isNewSession);
 
     if (isNewSession) {
-      await this.sendEmailIfNewSession(dto, user?.user_id?.email);
+      this.mailService.sendEmailIfNewSession(dto, user?.user_id?.email);
     }
     return { tokens, user: user?.user_id };
   }
