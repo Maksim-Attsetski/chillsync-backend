@@ -4,16 +4,14 @@ import { Model } from 'mongoose';
 
 import { IQuery, MongoUtils } from 'src/utils';
 
-import {
-  CreateSessionDto as CreateDto,
-  CreateSessionDto,
-} from './dto/create.dto';
+import { CreateSessionDto } from './dto/create.dto';
 import { UpdateSessionDto as UpdateDto } from './dto/update.dto';
 import { Session, SessionDocument } from './sessions.entity';
 import { GetSessionDto as GetDto } from './dto/get.dto';
 import { UsersDocument } from '../users';
 import { JwtService } from '@nestjs/jwt';
 import { Config } from 'src/modules';
+import { MailService } from '../mail';
 
 interface ITokens {
   accessToken: string;
@@ -25,14 +23,8 @@ export class SessionsService {
   constructor(
     @InjectModel(Session.name) private SessionsModel: Model<SessionDocument>,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
-
-  async create(createSessionsDto: CreateDto) {
-    return await MongoUtils.create({
-      model: this.SessionsModel,
-      data: createSessionsDto,
-    });
-  }
 
   async findAll(query: IQuery) {
     return await MongoUtils.getAll({
@@ -80,7 +72,7 @@ export class SessionsService {
     return { accessToken, refreshToken };
   }
 
-  async saveSession(dto: CreateSessionDto): Promise<void> {
+  async saveSession(dto: CreateSessionDto): Promise<boolean> {
     const session = await this.SessionsModel.findOne({
       user_id: dto.user_id,
       user_agent: dto.user_agent,
@@ -90,19 +82,27 @@ export class SessionsService {
       session.refreshToken = dto.refreshToken;
       session.last_active_at = new Date();
       await session.save();
+      return false;
     } else {
-      await this.create(dto);
+      await MongoUtils.create({
+        model: this.SessionsModel,
+        data: dto,
+      });
+      return true;
     }
   }
 
   async generateAndSaveSession(
     dto: Omit<CreateSessionDto, 'refreshToken'>,
     user: UsersDocument,
-  ): Promise<ITokens> {
+  ): Promise<{ tokens: ITokens; isNewSession: boolean }> {
     const tokens = await this.generateTokens(user);
-    await this.saveSession({ ...dto, refreshToken: tokens.refreshToken });
+    const isNewSession = await this.saveSession({
+      ...dto,
+      refreshToken: tokens.refreshToken,
+    });
 
-    return tokens;
+    return { tokens, isNewSession };
   }
 
   async delete(

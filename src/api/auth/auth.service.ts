@@ -1,5 +1,5 @@
 import { hash, compare } from 'bcryptjs';
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt/dist';
@@ -12,10 +12,12 @@ import {
   UsersDocument,
   GetUserDto,
   ITokenDto,
+  MailService,
 } from 'src/api';
 import { v4 } from 'uuid';
 import { SessionsService } from '../sessions';
 import { Config } from 'src/modules';
+import { CreateSessionDto } from '../sessions/dto/create.dto';
 
 interface ITokens {
   accessToken: string;
@@ -32,7 +34,22 @@ export class AuthService {
     @InjectModel('Users') private readonly usersModel: Model<UsersDocument>,
     private readonly jwtService: JwtService,
     private readonly sessionsService: SessionsService,
+    @Inject(forwardRef(() => MailService))
+    private readonly mailService: MailService,
   ) {}
+
+  async sendEmailIfNewSession(dto: CreateSessionDto, email: string) {
+    await this.mailService.sendMail({
+      to: email,
+      subject: 'Новое устройство',
+      text: '',
+      html: `
+        <p>В ваш аккаунт был совершен вход с нового устройства ${!dto?.device_name || dto?.device_name === 'unknown' ? dto.user_agent : dto?.device_name}</p>
+        <br/>
+        <p>Если это были не вы, зайдите в приложение и срочно смените пароль!</p>
+      `,
+    });
+  }
 
   async createUser(data: SignupDto, password: string, providers: string[]) {
     const createdUser = await this.usersModel.create({
@@ -59,7 +76,7 @@ export class AuthService {
     const hashPassword = await hash(dto.password, 7);
     const createdUser = await this.createUser(dto, hashPassword, ['pass']);
 
-    const tokens = await this.sessionsService.generateAndSaveSession(
+    const { tokens } = await this.sessionsService.generateAndSaveSession(
       {
         user_id: createdUser.id,
         last_active_at: new Date(),
@@ -102,16 +119,16 @@ export class AuthService {
         user: null,
       };
 
-    const tokens = await this.sessionsService.generateAndSaveSession(
-      {
-        user_id: user.id,
-        last_active_at: new Date(),
-        created_at: new Date(),
-        user_agent: userAgent,
-        device_name: device ?? 'unknown',
-      },
-      user,
-    );
+    const dto = {
+      user_id: user.id,
+      last_active_at: new Date(),
+      created_at: new Date(),
+      user_agent: userAgent,
+      device_name: device ?? 'unknown',
+    } as CreateSessionDto;
+    const { tokens, isNewSession } =
+      await this.sessionsService.generateAndSaveSession(dto, user);
+    isNewSession && this.sendEmailIfNewSession(dto, user?.email);
     return { user, tokens };
   }
 
@@ -130,16 +147,20 @@ export class AuthService {
     const isPassEqual = await compare(loginDto.password, user?.password);
     if (!isPassEqual) throw Errors.badRequest('Password is wrong');
 
-    const tokens = await this.sessionsService.generateAndSaveSession(
-      {
-        user_id: user.id,
-        last_active_at: new Date(),
-        created_at: new Date(),
-        user_agent: userAgent,
-        device_name: device ?? 'unknown',
-      },
-      user,
-    );
+    const dto = {
+      user_id: user.id,
+      last_active_at: new Date(),
+      created_at: new Date(),
+      user_agent: userAgent,
+      device_name: device ?? 'unknown',
+    } as CreateSessionDto;
+    const { tokens, isNewSession } =
+      await this.sessionsService.generateAndSaveSession(dto, user);
+
+    if (isNewSession) {
+      await this.sendEmailIfNewSession(dto, user?.email);
+    }
+
     return { user, tokens };
   }
 
@@ -168,17 +189,22 @@ export class AuthService {
 
     const user = await tokenData.populate('user_id');
 
-    // user.user_id.email;
-    const tokens = await this.sessionsService.generateAndSaveSession(
-      {
-        ...tokenData,
-        user_agent: user_agent,
-        user_id: user_id,
-        last_active_at: new Date(),
-      },
-      user?.user_id as UsersDocument,
-    );
+    const dto = {
+      ...tokenData,
+      user_agent: user_agent,
+      user_id: user_id,
+      last_active_at: new Date(),
+    } as CreateSessionDto;
+    const { tokens, isNewSession } =
+      await this.sessionsService.generateAndSaveSession(
+        dto,
+        user?.user_id as UsersDocument,
+      );
+    console.log('isNewSession', isNewSession);
 
+    if (isNewSession) {
+      await this.sendEmailIfNewSession(dto, user?.user_id?.email);
+    }
     return { tokens, user: user?.user_id };
   }
 

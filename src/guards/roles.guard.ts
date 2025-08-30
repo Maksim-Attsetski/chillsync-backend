@@ -1,9 +1,18 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { AuthService, ERoles } from 'src/api';
 import { getTokenFromRequest } from 'src/utils';
 
 class RolesGuard implements CanActivate {
-  constructor(private authService: AuthService) {}
+  constructor(
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
+  ) {}
 
   async checkTokenRole(
     token?: string,
@@ -41,7 +50,10 @@ class RolesGuard implements CanActivate {
 @Injectable()
 export class IsAdminGuard implements CanActivate {
   guard: RolesGuard;
-  constructor(private authService: AuthService) {
+  constructor(
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
+  ) {
     this.guard = new RolesGuard(authService);
   }
 
