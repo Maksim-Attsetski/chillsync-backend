@@ -1,25 +1,21 @@
-import { Controller, Get, OnModuleInit } from '@nestjs/common';
-
+// app.controller.ts
+import { Controller, Get, OnApplicationBootstrap } from '@nestjs/common';
 import { PingService } from './ping.service';
 
-@Controller('ping')
-export class PingController implements OnModuleInit {
+@Controller()
+export class PingController implements OnApplicationBootstrap {
   constructor(private readonly pingService: PingService) {}
 
-  async onModuleInit() {
-    if (process.env.IS_PROD) {
-      // Первый вызов при инициализации
-      await this.pingService.receivePing();
-
-      // Последующие вызовы
+  onApplicationBootstrap() {
+    if (process.env.IS_DEV) {
       setInterval(() => {
-        this.pingService.receivePing();
-      }, 7000);
+        this.pingService.selfPing();
+      }, 9_000);
     }
   }
 
-  @Get()
-  receive() {
-    return this.pingService.receivePing();
+  @Get('ping')
+  async ping(): Promise<string> {
+    return 'pong';
   }
 }
