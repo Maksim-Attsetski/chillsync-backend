@@ -20,6 +20,7 @@ import {
   MailModule,
   SessionsModule,
 } from 'src/api';
+import { RoomsModule } from 'src/sockets';
 
 @Module({
   imports: [
@@ -43,6 +44,9 @@ import {
     TmdbModule,
     UserSubsModule,
     MailModule,
+
+    // sockets
+    RoomsModule,
   ],
 })
 export class AppModule {}
