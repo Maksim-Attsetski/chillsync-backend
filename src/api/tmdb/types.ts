@@ -28,4 +28,4 @@ interface IDBResponse<T> {
 }
 
 export type TMoviesResponse = IDBResponse<IMovie>;
-export type TGenreResponse = IDBResponse<IGenre>;
+export type TGenreResponse = { genres: IGenre[] };

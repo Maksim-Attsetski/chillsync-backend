@@ -10,5 +10,6 @@ import { MovieReactionModule } from '../movie-reactions';
   imports: [HttpModule, AuthModule, MovieModule, MovieReactionModule],
   providers: [TmdbService],
   controllers: [TmdbController],
+  exports: [TmdbService],
 })
 export class TmdbModule {}
