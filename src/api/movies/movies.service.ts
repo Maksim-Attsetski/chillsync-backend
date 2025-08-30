@@ -73,6 +73,7 @@ export class MovieService {
     const reactions = await this.movieReactionModel.find({ user_id: userId });
     return { reactions, movies };
   }
+
   async createManyMovies(dtoList: CreateMovieDto[]) {
     await this.movieModel.bulkWrite(
       dtoList.map((obj) => ({
@@ -109,6 +110,30 @@ export class MovieService {
     } else {
       query.filter = newFilter;
     }
+
+    return await MongoUtils.getAll({
+      model: this.movieModel,
+      dto: GetMovieDto,
+      query,
+    });
+  }
+
+  async findMoviesForUserList(userIds: string[], genres: string) {
+    if (userIds.length === 0 || genres.length === 0) return [];
+    const userReactions = await this.movieReactionModel.find({
+      user_id: { $in: userIds },
+    });
+
+    const reactionIds = userReactions.map((r) => String(r.movie_id));
+    const uniqueReactionIds = Array.from(new Set(reactionIds));
+
+    const newFilter = `_id_not_in_${uniqueReactionIds.join(',')}`;
+
+    const query = {
+      filter: `${newFilter};vote_count>=50;genre_ids_in_${genres}`,
+      sort: 'vote_average==desc',
+      limit: 30,
+    } as IQuery;
 
     return await MongoUtils.getAll({
       model: this.movieModel,

@@ -7,11 +7,14 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { randomUUID } from 'crypto';
+import { MovieService } from 'src/api';
+import { IMovie } from 'src/api/tmdb/types';
 
+type TMovieWthReaction = IMovie & { reaction: string };
 interface RoomData {
   users: string[]; // socket.id[]
-  movies: { id: number; name: string }[];
-  selections: Record<string, { id: number; name: string; reaction: string }[]>;
+  movies: IMovie[];
+  selections: Record<string, TMovieWthReaction[]>;
   admin: string;
 }
 
@@ -23,6 +26,8 @@ export class RoomsGateway {
   @WebSocketServer()
   server: Server;
 
+  constructor(private readonly moviesService: MovieService) {}
+
   // in-memory комнаты
   private rooms: Record<string, RoomData> = {};
 
@@ -32,11 +37,12 @@ export class RoomsGateway {
 
   /** Создать комнату */
   @SubscribeMessage('create_room')
-  handleCreateRoom(@ConnectedSocket() client: Socket) {
+  async handleCreateRoom(@ConnectedSocket() client: Socket) {
     const roomId = randomUUID();
+    const movies = await this.generateMovies();
     this.rooms[roomId] = {
       users: [client.id],
-      movies: this.generateMovies(),
+      movies,
       selections: {},
       admin: client.id,
     };
@@ -82,7 +88,7 @@ export class RoomsGateway {
     @MessageBody()
     data: {
       roomId: string;
-      movies: { id: number; name: string; reaction: string }[];
+      movies: TMovieWthReaction[];
     },
   ) {
     const room = this.rooms[data.roomId];
@@ -155,11 +161,11 @@ export class RoomsGateway {
 
   /** Reload (новый список фильмов, сброс выборов) */
   @SubscribeMessage('reload_room')
-  handleReloadRoom(@MessageBody() data: { roomId: string }) {
+  async handleReloadRoom(@MessageBody() data: { roomId: string }) {
     const room = this.rooms[data.roomId];
     if (!room) return;
 
-    room.movies = this.generateMovies();
+    room.movies = await this.generateMovies();
     room.selections = {};
     this.server.to(data.roomId).emit('movies_list', room.movies);
   }
@@ -180,13 +186,12 @@ export class RoomsGateway {
   }
 
   /** Вспомогательная генерация фильмов */
-  private generateMovies() {
-    return [
-      { id: 1, name: 'Avengers' },
-      { id: 2, name: 'Inception' },
-      { id: 3, name: 'Matrix' },
-      { id: 4, name: 'Interstellar' },
-      { id: 5, name: 'The Dark Knight' },
-    ];
+  async generateMovies() {
+    const movies = await this.moviesService.findAll({
+      limit: 30,
+      filter: 'vote_count>=50',
+      sort: 'vote_average==desc',
+    });
+    return movies.data;
   }
 }

@@ -45,6 +45,7 @@ export class MovieController {
   ) {
     return this.movieService.findAll(query);
   }
+
   @Get('for-me')
   findMoviesForMe(
     @Query() query: IQuery,
@@ -52,6 +53,15 @@ export class MovieController {
   ) {
     if (!user?._id) throw Errors.unauthorized();
     return this.movieService.findMoviesForMe(query, user._id);
+  }
+
+  @Get('for-us')
+  findMoviesForUserList(@Query() query: { userIds: string; genres: string }) {
+    if (!query?.userIds || query?.userIds?.length === 0) return [];
+    return this.movieService.findMoviesForUserList(
+      query?.userIds?.split(',') ?? [],
+      query?.genres ?? '',
+    );
   }
 
   @Get(':id')
