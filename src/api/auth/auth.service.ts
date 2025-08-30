@@ -5,7 +5,6 @@ import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt/dist';
 
 import { Errors } from 'src/utils';
-import { Config } from 'src/modules';
 import {
   CreateUserDto as SignupDto,
   LoginUserDto,
@@ -14,8 +13,9 @@ import {
   GetUserDto,
   ITokenDto,
 } from 'src/api';
-import { Token, TokenDocument } from './auth.entity';
 import { v4 } from 'uuid';
+import { SessionsService } from '../sessions';
+import { Config } from 'src/modules';
 
 interface ITokens {
   accessToken: string;
@@ -29,9 +29,9 @@ export interface IAuthResponse {
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(Token.name) private readonly tokenModel: Model<TokenDocument>,
     @InjectModel('Users') private readonly usersModel: Model<UsersDocument>,
     private readonly jwtService: JwtService,
+    private readonly sessionsService: SessionsService,
   ) {}
 
   async createUser(data: SignupDto, password: string, providers: string[]) {
@@ -46,7 +46,11 @@ export class AuthService {
     return createdUser;
   }
 
-  async signup(dto: SignupDto, userAgent: string): Promise<IAuthResponse> {
+  async signup(
+    dto: SignupDto,
+    userAgent: string,
+    device?: string,
+  ): Promise<IAuthResponse> {
     const emailIsExist = await this.usersModel.findOne({ email: dto.email });
 
     if (emailIsExist)
@@ -55,7 +59,16 @@ export class AuthService {
     const hashPassword = await hash(dto.password, 7);
     const createdUser = await this.createUser(dto, hashPassword, ['pass']);
 
-    const tokens = await this.generateAndSaveTokens(createdUser, userAgent);
+    const tokens = await this.sessionsService.generateAndSaveSession(
+      {
+        user_id: createdUser.id,
+        last_active_at: new Date(),
+        created_at: new Date(),
+        user_agent: userAgent,
+        device_name: device ?? 'unknown',
+      },
+      createdUser,
+    );
 
     return { user: createdUser, tokens };
   }
@@ -63,6 +76,7 @@ export class AuthService {
   async authByGoogle(
     credential: string,
     userAgent: string,
+    device?: string,
   ): Promise<IAuthResponse> {
     const userData: any = this.jwtService.decode(credential);
 
@@ -71,7 +85,7 @@ export class AuthService {
       email: userData?.email,
     });
 
-    let user = emailIsExist;
+    let user = emailIsExist as UsersDocument;
 
     if (!emailIsExist) {
       user = await this.usersModel.create({
@@ -88,13 +102,23 @@ export class AuthService {
         user: null,
       };
 
-    const tokens = await this.generateAndSaveTokens(user, userAgent);
+    const tokens = await this.sessionsService.generateAndSaveSession(
+      {
+        user_id: user.id,
+        last_active_at: new Date(),
+        created_at: new Date(),
+        user_agent: userAgent,
+        device_name: device ?? 'unknown',
+      },
+      user,
+    );
     return { user, tokens };
   }
 
   async login(
     loginDto: LoginUserDto,
     userAgent: string,
+    device?: string,
   ): Promise<IAuthResponse> {
     const user = await this.usersModel
       .findOne({ email: loginDto.email })
@@ -106,54 +130,17 @@ export class AuthService {
     const isPassEqual = await compare(loginDto.password, user?.password);
     if (!isPassEqual) throw Errors.badRequest('Password is wrong');
 
-    const tokens = await this.generateAndSaveTokens(user, userAgent);
+    const tokens = await this.sessionsService.generateAndSaveSession(
+      {
+        user_id: user.id,
+        last_active_at: new Date(),
+        created_at: new Date(),
+        user_agent: userAgent,
+        device_name: device ?? 'unknown',
+      },
+      user,
+    );
     return { user, tokens };
-  }
-
-  async generateTokens({ _id, email, role }: UsersDocument): Promise<ITokens> {
-    const accessToken = this.jwtService.sign(
-      { email, _id, role },
-      { expiresIn: '15m', secret: Config.accessSecret },
-    );
-    const refreshToken = this.jwtService.sign(
-      { email, _id, role },
-      { expiresIn: '30d', secret: Config.refreshSecret },
-    );
-
-    return { accessToken, refreshToken };
-  }
-
-  async saveTokens(
-    userID: string,
-    refreshToken: string,
-    userAgent: string,
-  ): Promise<void> {
-    const token = await this.tokenModel.findOne({ userID, userAgent });
-
-    if (token) {
-      token.refreshToken = refreshToken;
-      await token.save();
-    } else {
-      await this.tokenModel.create({ userID, refreshToken, userAgent });
-    }
-  }
-
-  async generateAndSaveTokens(user: any, userAgent: string): Promise<ITokens> {
-    const tokens = await this.generateTokens(user);
-
-    const token = userAgent.includes('okhttp')
-      ? tokens.accessToken
-      : tokens.refreshToken;
-    await this.saveTokens(user?._id + '', token, userAgent);
-
-    return tokens;
-  }
-
-  async deleteToken(obj: {
-    userID?: string;
-    refreshToken?: string;
-  }): Promise<void> {
-    await this.tokenModel.findOneAndDelete(obj);
   }
 
   async validateToken(
@@ -169,44 +156,33 @@ export class AuthService {
     }
   }
 
-  async getToken(
-    userAgent: string,
-    refreshToken?: string,
-    accessToken?: string,
-  ): Promise<TokenDocument | null> {
-    try {
-      const token = userAgent.includes('okhttp') ? accessToken : refreshToken;
-      return await this.tokenModel.findOne({ refreshToken: token });
-    } catch (error) {
-      return null;
-    }
-  }
+  async refresh(user_id: string, user_agent: string): Promise<IAuthResponse> {
+    const tokenData = await this.sessionsService.getOne({
+      user_id,
+      user_agent,
+    });
 
-  async refresh(
-    refreshToken: string,
-    accessToken: string,
-    userAgent: string,
-  ): Promise<IAuthResponse> {
-    if (!(refreshToken || accessToken)) {
-      throw Errors.unauthorized();
-    }
-    const tokenIsValid = await this.validateToken(refreshToken, true);
-    const accessTokenIsValid = await this.validateToken(accessToken);
-    const tokenData = await this.getToken(userAgent, refreshToken, accessToken);
-
-    if (!tokenData || !(tokenIsValid || accessTokenIsValid)) {
+    if (!tokenData) {
       throw Errors.unauthorized();
     }
 
-    const user = await this.usersModel
-      .findById(tokenData.userID)
-      .populate(Object.keys(new GetUserDto()));
-    const tokens = await this.generateAndSaveTokens(user, userAgent);
+    const user = await tokenData.populate('user_id');
 
-    return { tokens, user };
+    // user.user_id.email;
+    const tokens = await this.sessionsService.generateAndSaveSession(
+      {
+        ...tokenData,
+        user_agent: user_agent,
+        user_id: user_id,
+        last_active_at: new Date(),
+      },
+      user?.user_id as UsersDocument,
+    );
+
+    return { tokens, user: user?.user_id };
   }
 
-  async getTokens(): Promise<any> {
-    return await this.tokenModel.find();
+  async logout(obj: { user_id: string; user_agent: string }) {
+    return await this.sessionsService.delete(obj);
   }
 }

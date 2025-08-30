@@ -1,18 +1,9 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Param,
-  Patch,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Param, Delete, Query } from '@nestjs/common';
 
 import { SessionsService } from './sessions.service';
-import type { IQuery } from 'src/utils';
-import { CreateSessionDto } from './dto/create.dto';
-import { UpdateSessionDto } from './dto/update.dto';
+import { Errors, type IQuery } from 'src/utils';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { type ITokenDto } from '../users';
 
 @Controller('sessions')
 export class SessionController {
@@ -28,18 +19,15 @@ export class SessionController {
     return await this.sessionsService.findOne(id);
   }
 
-  @Post()
-  async create(@Body() dto: CreateSessionDto) {
-    return await this.sessionsService.create(dto);
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateSessionDto) {
-    return await this.sessionsService.update(id, dto);
-  }
-
-  @Delete(':id')
-  async delete(@Param('id') id: string, @Query() query: { isUser?: boolean }) {
-    return await this.sessionsService.remove(id, query?.isUser);
+  @Delete()
+  async delete(
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+    @Query() query: { all?: boolean },
+  ) {
+    if (!user) throw Errors.unauthorized();
+    return await this.sessionsService.delete(
+      { user_id: user?._id, user_agent: user?.user_agent },
+      query?.all,
+    );
   }
 }

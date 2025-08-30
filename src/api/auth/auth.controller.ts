@@ -2,7 +2,8 @@ import { Controller, Post, Body, Res, Get, Req } from '@nestjs/common';
 import { Errors } from 'src/utils';
 
 import { AuthService, IAuthResponse } from './auth.service';
-import { LoginUserDto, CreateUserDto } from 'src/api';
+import { LoginUserDto, CreateUserDto, type ITokenDto } from 'src/api';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
 
 @Controller('auth')
 export class AuthController {
@@ -17,7 +18,7 @@ export class AuthController {
         sameSite: 'None',
         secure: true,
       });
-      return { ...data, tokens: data.tokens.accessToken };
+      return data;
     } else {
       throw Errors.undefinedError();
     }
@@ -32,24 +33,19 @@ export class AuthController {
     const data: IAuthResponse = await this.authService.login(
       loginDto,
       req.headers['user-agent'],
+      req.headers['device'],
     );
     return this.setCookies(data, res);
   }
 
-  @Get('tokens') // TODO delete on release
-  async tokens() {
-    return await this.authService.getTokens();
-  }
-
   @Get('refresh')
-  async refresh(@Req() req, @Res({ passthrough: true }) res) {
-    const refreshToken = req.cookies?.refreshToken;
-    const accessToken = req?.headers?.authorization?.split(' ')?.at(-1);
-
+  async refresh(
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+    @Res({ passthrough: true }) res,
+  ) {
     const data: IAuthResponse = await this.authService.refresh(
-      refreshToken,
-      accessToken,
-      req.headers['user-agent'],
+      user?._id,
+      user?.user_agent,
     );
     return this.setCookies(data, res);
   }
@@ -63,6 +59,7 @@ export class AuthController {
     const data: IAuthResponse = await this.authService.signup(
       signupDto,
       req.headers['user-agent'],
+      req.headers['device'],
     );
     return this.setCookies(data, res);
   }
@@ -76,16 +73,22 @@ export class AuthController {
     const data: IAuthResponse = await this.authService.authByGoogle(
       credential,
       req.headers['user-agent'],
+      req.headers['device'],
     );
     return this.setCookies(data, res);
   }
 
   @Get('logout')
-  async logout(@Req() req, @Res({ passthrough: true }) res) {
-    const { refreshToken } = req.cookies;
+  async logout(
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+    @Res({ passthrough: true }) res,
+  ) {
     res.clearCookie('refreshToken');
 
-    await this.authService.deleteToken({ refreshToken });
+    await this.authService.logout({
+      user_agent: user?.user_agent,
+      user_id: user?._id,
+    });
     return true;
   }
 }

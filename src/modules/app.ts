@@ -18,6 +18,7 @@ import {
   MovieReactionModule,
   UserSubsModule,
   MailModule,
+  SessionsModule,
 } from 'src/api';
 
 @Module({
@@ -30,6 +31,7 @@ import {
       rootPath: join(__dirname, '..', '..', 'static'),
     }),
     MongooseModule.forRoot(process.env.DB_URL!),
+    SessionsModule,
     AuthModule,
     UsersModule,
     FriendModule,

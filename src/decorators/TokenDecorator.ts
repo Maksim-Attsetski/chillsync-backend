@@ -24,16 +24,14 @@ export class ParsedTokenPipe implements PipeTransform {
         const token = authHeader.split(' ')[1];
         const data = this.jwtService.decode(token);
 
-        return data;
+        const user_agent = req.headers['user-agent'] ?? 'unknown';
+        return { ...data, user_agent };
       }
     } catch (err) {
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
 }
-
-// parsed-token.decorator.ts
-
 export const ParsedToken = createParamDecorator(
   (_: unknown, ctx: ExecutionContext) => {
     return ctx.switchToHttp().getRequest();

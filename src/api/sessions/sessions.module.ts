@@ -6,14 +6,14 @@ import { Session, SessionSchema } from './sessions.entity';
 import { SessionController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
 
-export const SessionModel = MongooseModule.forFeature([
+export const SessionsModel = MongooseModule.forFeature([
   { name: Session.name, schema: SessionSchema },
 ]);
 
 @Module({
-  imports: [JwtModule, SessionModel],
+  imports: [JwtModule, SessionsModel],
   controllers: [SessionController],
   providers: [SessionsService],
-  exports: [SessionsService],
+  exports: [SessionsService, JwtModule],
 })
-export class SessionModule {}
+export class SessionsModule {}

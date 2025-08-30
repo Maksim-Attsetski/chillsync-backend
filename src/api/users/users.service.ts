@@ -8,16 +8,17 @@ import { MongoUtils, IQuery, Errors } from 'src/utils';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUserDto } from './dto/get-user.dto';
 import { Users, UsersDocument } from './users.entity';
-import { AuthService } from '../auth';
 import { ERoles } from './dto/create-user.dto';
 import { FriendService } from '../friends';
 import { MovieReactionService } from '../movie-reactions';
+import { SessionsService } from '../sessions';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(Users.name) private userModel: Model<UsersDocument>,
-    @Inject(forwardRef(() => AuthService)) private authService: AuthService,
+    @Inject(forwardRef(() => SessionsService))
+    private sessionsService: SessionsService,
     @Inject(forwardRef(() => FriendService))
     private friendService: FriendService,
     @Inject(forwardRef(() => MovieReactionService))
@@ -86,7 +87,7 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    await this.authService.deleteToken({ userID: id });
+    await this.sessionsService.delete({ user_id: id, user_agent: '' }, true);
 
     await this.friendService.remove(id, true);
     await this.movieReactionService.remove(id, true);

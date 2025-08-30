@@ -11,7 +11,12 @@ export const getTokenFromRequest = (request: any): IResponse => {
   )
     ?.split(' ')
     ?.at(-1);
-  const refresh: TToken = request?.headers?.cookie?.split('=')?.at(-1);
+  let refresh: TToken = request?.headers?.cookie?.split('=')?.at(-1);
+
+  const agent = ((request.headers['user-agent'] ?? '') as string).toLowerCase();
+  if (!refresh && (agent?.includes('android') || agent?.includes('ios'))) {
+    return { access, refresh: request?.headers?.refreshToken };
+  }
 
   return { access, refresh };
 };
