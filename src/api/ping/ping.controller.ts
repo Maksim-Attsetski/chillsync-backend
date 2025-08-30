@@ -7,7 +7,7 @@ export class PingController implements OnApplicationBootstrap {
   constructor(private readonly pingService: PingService) {}
 
   onApplicationBootstrap() {
-    if (process.env.IS_DEV) {
+    if (!process.env.IS_DEV) {
       setInterval(() => {
         this.pingService.selfPing();
       }, 9_000);
@@ -16,6 +16,7 @@ export class PingController implements OnApplicationBootstrap {
 
   @Get('ping')
   async ping(): Promise<string> {
+    console.log('PONG');
     return 'pong';
   }
 }
