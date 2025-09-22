@@ -7,7 +7,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { MovieService } from 'src/api';
+import { CreateMovieDto, MovieService } from 'src/api';
 import { TmdbService } from 'src/api/tmdb/tmdb.service';
 import { IMovie } from 'src/api/tmdb/types';
 import { IArrayRes } from 'src/utils/mongoUtils';
@@ -74,13 +74,11 @@ export class RoomsGateway implements OnGatewayDisconnect {
     this.clients[client.id] = data.userId;
     client.join(data.roomId);
 
-    this.server
-      .to(data.roomId)
-      .emit('joined_room', {
-        roomId: data.roomId,
-        userId: data.userId,
-        users: room.users,
-      });
+    this.server.to(data.roomId).emit('joined_room', {
+      roomId: data.roomId,
+      userId: data.userId,
+      users: room.users,
+    });
     return {
       event: 'joined_room',
       data: { roomId: data.roomId, userId: data.userId },
@@ -122,7 +120,7 @@ export class RoomsGateway implements OnGatewayDisconnect {
 
   /** Юзер выбрал фильмы */
   @SubscribeMessage('event_movies_selected')
-  handleMoviesSelected(
+  async handleMoviesSelected(
     @ConnectedSocket() client: Socket,
     @MessageBody()
     data: { roomId: string; movies: TMovieWithReaction[]; userId: string },
@@ -151,6 +149,15 @@ export class RoomsGateway implements OnGatewayDisconnect {
     const winners = Object.values(movieVotes)
       .filter((m) => m.likes >= needed)
       .map((m) => m.movie);
+
+    await Promise.allSettled(
+      room.users.map((id) =>
+        this.moviesService.createMany(
+          room.movieSelections[id] as CreateMovieDto[],
+          id,
+        ),
+      ),
+    );
 
     this.server.to(data.roomId).emit('event_results', winners);
   }
