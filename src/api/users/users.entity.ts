@@ -26,7 +26,7 @@ export class Users extends Base {
   role: string;
 
   @Prop({ default: null })
-  location: [number, number];
+  location: string;
 
   @Prop({ default: 'male' })
   sex: 'male' | 'female';

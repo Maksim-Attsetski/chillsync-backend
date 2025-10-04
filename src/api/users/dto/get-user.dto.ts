@@ -8,7 +8,7 @@ export class GetUserDto implements IBase {
   first_name: string;
   last_name: string;
   sex: 'male' | 'female';
-  location: [number, number];
+  location: string;
   public_id: string;
   role: ERoles;
   providers: string[];
@@ -25,7 +25,7 @@ export class GetUserDto implements IBase {
     this.public_id = model?.public_id ?? '';
     this.sex = model?.sex ?? 'male';
     this.role = model?.role ?? ERoles.USER;
-    this.location = model?.location ?? [0, 0];
+    this.location = model?.location ?? '';
     this.providers = model?.providers ?? [];
     this.blockedAt = model?.blockedAt ?? 0;
     this.updated_at = model?.updated_at ?? null;
