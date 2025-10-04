@@ -15,12 +15,12 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ERoles } from './dto/create-user.dto';
 
-@UseGuards(AuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @UseGuards(AuthGuard)
   findAll(@Query() query: IQuery) {
     return this.usersService.findAll(query);
   }
@@ -31,6 +31,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   findOne(@Param('id') id: string, @Query('isFull') isFull: boolean) {
     return this.usersService.findOne(id, isFull);
   }
@@ -42,6 +43,7 @@ export class UsersController {
   }
 
   @Patch(':id/password')
+  @UseGuards(AuthGuard)
   updatePassword(
     @Param('id') id: string,
     @Body() updateUserDto: { last: string; new: string },
@@ -50,11 +52,13 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard)
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
