@@ -25,6 +25,11 @@ export class UsersController {
     return this.usersService.findAll(query);
   }
 
+  @Get('email')
+  chackByEmail(@Query('email') email: string) {
+    return this.usersService.checkEmail(email);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string, @Query('isFull') isFull: boolean) {
     return this.usersService.findOne(id, isFull);

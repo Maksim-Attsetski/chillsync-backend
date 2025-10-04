@@ -33,6 +33,11 @@ export class UsersService {
     });
   }
 
+  async checkEmail(email: string) {
+    const user = await this.userModel.findOne({ email });
+    return !!user;
+  }
+
   async findOne(id: string, isFull?: boolean) {
     return await MongoUtils.get({
       model: this.userModel,
