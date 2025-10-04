@@ -2,19 +2,20 @@ import { MongoClient } from 'mongodb';
 import { BSON } from 'bson';
 import 'dotenv/config';
 
-const uri =
-  'mongodb+srv://chill:sync@cluster0.ob0p9db.mongodb.net/?retryWrites=true&w=majority';
-if (!uri) {
-  console.error('Переменная окружения DB_URL не задана');
-  process.exit(1);
-}
+const uri = process.env.DB_URL as string | undefined;
 
 async function run() {
+  if (!uri) {
+    console.error('Переменная окружения DB_URL не задана');
+    process.exit(1);
+  }
   const client = new MongoClient(uri);
   try {
     await client.connect();
 
-    const dbName = client.options.dbName || uri.split('/').pop().split('?')[0];
+    const dbName =
+      client.options.dbName || uri?.split?.('/')?.pop?.()?.split?.('?')?.[0];
+    if (!dbName) return '';
     const db = client.db(dbName);
 
     const collections = await db.collections();
