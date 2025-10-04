@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 import { Errors, IQuery, MongoUtils } from 'src/utils';
 
@@ -60,12 +60,17 @@ export class MovieService {
 
     await this.movieReactionModel.bulkWrite(
       movies.map((m) => ({
-        insertOne: {
-          document: {
-            movie_id: m._id,
-            user_id: userId,
+        updateOne: {
+          filter: {
+            movie_id: new Types.ObjectId(m._id),
+            user_id: new Types.ObjectId(userId),
+          },
+          update: {
+            movie_id: new Types.ObjectId(m._id),
+            user_id: new Types.ObjectId(userId),
             reaction: dtoObject[m.id] ?? 'LIKE',
           },
+          upsert: true,
         },
       })),
     );
