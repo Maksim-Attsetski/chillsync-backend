@@ -7,7 +7,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { CreateMovieDto, MovieService } from 'src/api';
+import { CreateMovieDto, MovieReactionService } from 'src/api';
 import { TmdbService } from 'src/api/tmdb/tmdb.service';
 import { IMovie } from 'src/api/tmdb/types';
 import { IArrayRes } from 'src/utils/mongoUtils';
@@ -32,7 +32,7 @@ export class RoomsGateway implements OnGatewayDisconnect {
   private clients: Record<string, string> = {}; // client.id → userId
 
   constructor(
-    private readonly moviesService: MovieService,
+    private readonly moviesReactionService: MovieReactionService,
     private readonly tmdbService: TmdbService,
   ) {}
 
@@ -109,7 +109,7 @@ export class RoomsGateway implements OnGatewayDisconnect {
     const allSelected = room.users.every((u) => room.genresSelections[u]);
     if (!allSelected) return;
 
-    const res = (await this.moviesService.findMoviesForUserList(
+    const res = (await this.moviesReactionService.findMoviesForUserList(
       room.users,
       Object.values(room.genresSelections).flat().join(','),
     )) as IArrayRes;
@@ -152,7 +152,7 @@ export class RoomsGateway implements OnGatewayDisconnect {
 
     await Promise.allSettled(
       room.users.map((id) =>
-        this.moviesService.createMany(
+        this.moviesReactionService.createMany(
           room.movieSelections[id] as CreateMovieDto[],
           id,
         ),

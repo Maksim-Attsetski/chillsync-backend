@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { RoomsGateway } from './rooms.gateway';
-import { MovieModule, TmdbModule } from 'src/api';
+import { MovieReactionModule, TmdbModule } from 'src/api';
 
 @Module({
-  imports: [MovieModule, TmdbModule],
+  imports: [MovieReactionModule, TmdbModule],
   providers: [RoomsGateway], // добавляем как provider
 })
 export class RoomsModule {}
