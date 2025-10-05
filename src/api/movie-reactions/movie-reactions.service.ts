@@ -146,11 +146,21 @@ export class MovieReactionService {
       });
     });
 
+    const alreadyLikedMovies = userReactions.map((r) => r.movie_id?.id);
     const genreIds = Object.keys(genresDict)
       .sort((a, b) => genresDict[b] - genresDict[a])
-      .slice(0, 5);
+      .slice(0, 4);
 
-    return { genres: genresDict, genreIds };
+    const movies = await MongoUtils.getAll({
+      model: this.movieModel,
+      dto: GetMovieDto,
+      query: {
+        filter: `vote_count>=50;genre_ids_in_${genreIds.join(',')};id_not_in_${alreadyLikedMovies.join(',')}`,
+        limit: 50,
+      },
+    });
+
+    return { genres: genresDict, genreIds, ...movies };
   }
 
   async findOne(id: string) {
