@@ -160,7 +160,8 @@ export class MovieReactionService {
       },
     });
 
-    return { genres: genresDict, genreIds, ...movies };
+    console.log('genre ids', genreIds);
+    return movies;
   }
 
   async findOne(id: string) {
