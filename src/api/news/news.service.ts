@@ -1,21 +1,23 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
-import { Errors, IQuery, MongoUtils } from 'src/utils';
 import { fileModule, IFile } from 'src/modules';
+import { EBucketNames } from 'src/modules/supa';
+import { Errors, IQuery, MongoUtils } from 'src/utils';
 
 import { CreateNewsDto } from './dto/create-news.dto';
+import { GetNewsDto } from './dto/get-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { News, newsDocument } from './news.entity';
-import { GetNewsDto } from './dto/get-news.dto';
 
 @Injectable()
 export class NewsService {
   constructor(@InjectModel(News.name) private newsModel: Model<newsDocument>) {}
 
   async create(createNewsDto: CreateNewsDto, preview: IFile) {
-    const name = await fileModule.createFile(preview);
+    const name = await fileModule.createFile(EBucketNames.NEWS, preview);
+
+    if (!name) throw new Error('Не удалось прикрепить файл');
 
     return await MongoUtils.create({
       model: this.newsModel,
@@ -58,7 +60,7 @@ export class NewsService {
 
     if (!item) throw Errors.notFound('News');
     if (item?.preview) {
-      await fileModule.deleteFile(item.preview);
+      await fileModule.deleteFile(EBucketNames.NEWS, [item.preview]);
     }
 
     return item._id;

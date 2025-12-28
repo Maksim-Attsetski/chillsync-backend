@@ -1,9 +1,9 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
-  Inject,
   forwardRef,
+  Inject,
+  Injectable,
 } from '@nestjs/common';
 import { AuthService, ERoles } from 'src/api';
 import { getTokenFromRequest } from 'src/utils';
@@ -21,7 +21,7 @@ class RolesGuard implements CanActivate {
   ): Promise<boolean> {
     if (token) {
       const res = await this.authService.validateToken(token, isRefresh);
-      if (!!res) return res?.role === role;
+      if (res) return res?.role === role;
     }
     return false;
   }

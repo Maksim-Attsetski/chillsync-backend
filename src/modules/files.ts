@@ -1,58 +1,49 @@
-import * as path from 'path';
-import * as fs from 'fs';
 import * as uuid from 'uuid';
 
+import { EBucketNames, supa } from './supa';
+
 class FileModule {
-  async createFile(file: IFile): Promise<string> {
-    try {
-      const extension = file.originalname.split('.').pop();
-      const fileName = uuid.v4() + '.' + extension;
-      const filePath = path.resolve(__dirname, '..', '..', 'static');
+  async createFile(
+    dir: EBucketNames,
+    file: IFile,
+    upsert?: boolean,
+  ): Promise<string | undefined> {
+    const extension = file.originalname.split('.').pop();
+    const fileName = uuid.v4() + '.' + extension;
 
-      if (!fs.existsSync(filePath)) {
-        fs.mkdirSync(filePath, { recursive: true });
-      }
+    const { error } = await supa.storage
+      .from(dir)
+      .upload(fileName, file.buffer, { upsert, contentType: file.mimetype });
 
-      fs.writeFileSync(path.join(filePath, fileName), file?.buffer);
+    if (error) {
+      throw new Error(error?.message);
+    }
 
-      return fileName;
-    } catch (error) {
-      throw error;
+    return dir + '/' + fileName;
+  }
+
+  async createManyFiles(
+    dir: EBucketNames,
+    files: IFile[],
+    upsert?: boolean,
+  ): Promise<string[]> {
+    const names = await Promise.all(
+      files.map((f) => this.createFile(dir, f, upsert)),
+    );
+    return names.filter(Boolean) as string[];
+  }
+
+  async deleteFile(dir: EBucketNames, fileName: string[]) {
+    const { error } = await supa.storage.from(dir).remove(fileName);
+
+    if (error) {
+      throw new Error(error?.message);
     }
   }
 
-  async createManyFiles(files: IFile[]): Promise<string[]> {
-    try {
-      const result: string[] = [];
-
-      files.forEach(async (file) => {
-        const name = await this.createFile(file);
-        name && result.push(name);
-      });
-
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async deleteFile(fileName: string): Promise<void> {
-    try {
-      const file = path.resolve('static', fileName);
-      await fs.rm(file, (err) => {
-        if (err) throw err;
-      });
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async deleteManyFiles(fileNames: string[]): Promise<void> {
-    try {
-      await Promise.allSettled(fileNames.map(this.deleteFile));
-    } catch (error) {
-      throw error;
-    }
+  getPublicUrl(dir: EBucketNames, fileName: string) {
+    const { data } = supa.storage.from(dir).getPublicUrl(fileName);
+    return data?.publicUrl;
   }
 }
 

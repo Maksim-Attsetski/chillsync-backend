@@ -1,31 +1,33 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-
-import Config from './config';
 import {
   AuthModule,
-  UsersModule,
   FriendModule,
-  NewsModule,
-  PingModule,
-  SubscriptionModule,
-  TmdbModule,
+  MailModule,
   MovieModule,
   MovieReactionModule,
-  UserSubsModule,
-  MailModule,
+  NewsModule,
+  PingModule,
   SessionsModule,
+  SubscriptionModule,
+  TmdbModule,
+  UsersModule,
+  UserSubsModule,
 } from 'src/api';
 import { RoomsModule } from 'src/sockets';
+
+const node_env = process.env.NODE_ENV;
+const isDev = !node_env || node_env === 'development';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: Config.isDev ? '.env.dev' : `.env.prod`,
+      isGlobal: true,
+      envFilePath: isDev ? '.env.dev' : `.env.prod`,
     }),
     ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({

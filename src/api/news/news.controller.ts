@@ -1,24 +1,25 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
   UploadedFile,
-  UseInterceptors,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { NewsService } from './news.service';
+import { IsAdminGuard } from 'src/guards';
+import { type IFile } from 'src/modules/files';
+import { type IQuery } from 'src/utils';
+import errors from 'src/utils/errors';
+
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
-import { type IQuery } from 'src/utils';
-
-import { type IFile } from 'src/modules/files';
-import { IsAdminGuard } from 'src/guards';
+import { NewsService } from './news.service';
 
 @Controller('news')
 export class NewsController {
@@ -31,7 +32,13 @@ export class NewsController {
     @Body() createNewsDto: CreateNewsDto,
     @UploadedFile() preview: IFile,
   ) {
-    return this.newsService.create(createNewsDto, preview);
+    if (!preview) throw errors.badRequest('Прикрепите файл');
+
+    try {
+      return this.newsService.create(createNewsDto, preview);
+    } catch (error) {
+      throw errors.badRequest(error?.message);
+    }
   }
 
   @Get()
