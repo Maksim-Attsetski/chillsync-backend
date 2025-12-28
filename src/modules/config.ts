@@ -11,7 +11,9 @@ class Config {
   constructor() {
     const isDev = !node_env || node_env === 'development';
     this.isDev = isDev;
-    process?.loadEnvFile?.(`.env.${isDev ? 'dev' : 'prod'}`);
+    if (isDev) {
+      process?.loadEnvFile?.(`.env.${isDev ? 'dev' : 'prod'}`);
+    }
 
     this.corsOptions = {
       // credentials: true,
