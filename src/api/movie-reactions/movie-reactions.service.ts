@@ -1,13 +1,8 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-
 import { Errors, IQuery, MongoUtils } from 'src/utils';
 
-import { CreateMovieReactionDto } from './dto/create-movie-reaction.dto';
-import { UpdateMovieReactionDto } from './dto/update-movie.dto';
-import { MovieReaction, MovieReactionDocument } from './movie-reactions.entity';
-import { GetMovieReactionDto } from './dto/get-movie.dto';
 import { Friend, FriendDocument } from '../friends';
 import {
   CreateMovieDto,
@@ -16,6 +11,10 @@ import {
   MovieDocument,
   MovieService,
 } from '../movies';
+import { CreateMovieReactionDto } from './dto/create-movie-reaction.dto';
+import { GetMovieReactionDto } from './dto/get-movie.dto';
+import { UpdateMovieReactionDto } from './dto/update-movie.dto';
+import { MovieReaction, MovieReactionDocument } from './movie-reactions.entity';
 
 @Injectable()
 export class MovieReactionService {
@@ -162,6 +161,23 @@ export class MovieReactionService {
 
     console.log('genre ids', genreIds);
     return movies;
+  }
+
+  async stats(user_id: string) {
+    const userReactions = await this.movieReactionModel.find({ user_id });
+
+    const likes = userReactions.filter((r) => r.reaction === 'LIKE');
+    const watched = userReactions.filter((r) => r.viewed_at && r.viewed_at > 0);
+    const watch_later = userReactions.filter((r) => r.viewed_at === 0);
+    const reviews = userReactions.filter((r) => r.rating > 0);
+
+    return {
+      likes: likes?.length,
+      watched: watched?.length,
+      watch_later: watch_later?.length,
+      reviews: reviews?.length,
+      dislikes: userReactions?.length - likes.length,
+    };
   }
 
   async findOne(id: string) {
