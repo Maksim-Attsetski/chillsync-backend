@@ -173,10 +173,10 @@ export class MovieReactionService {
 
     return {
       likes: likes?.length,
+      dislikes: userReactions?.length - likes.length,
+      reviews: reviews?.length,
       watched: watched?.length,
       watch_later: watch_later?.length,
-      reviews: reviews?.length,
-      dislikes: userReactions?.length - likes.length,
     };
   }
 
