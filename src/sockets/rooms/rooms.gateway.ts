@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { CreateMovieDto, MovieReactionService } from 'src/api';
 import { RoomStoreService, TRoomMovie } from 'src/api/rooms';
 import { TmdbService } from 'src/api/tmdb/tmdb.service';
+import { ERoomEmits, ERoomEvents } from 'src/types';
 
 @WebSocketGateway({ cors: { origin: '*' }, namespace: 'rooms' })
 @Injectable({ scope: Scope.DEFAULT })
@@ -28,7 +29,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   handleError(err: unknown) {
-    return { event: 'error', data: (err as any)?.message ?? err };
+    return { event: ERoomEvents.ERROR, data: (err as any)?.message ?? err };
   }
 
   async handleConnection(client: Socket) {
@@ -79,24 +80,26 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       room.markModified('movieSelections');
       await room.save();
 
-      this.server.to(String(room._id)).emit('user_left', { userId, roomId });
+      this.server
+        .to(String(room._id))
+        .emit(ERoomEmits.USER_LEFT, { userId, roomId });
     }
   }
 
   /** Получить комнату пользователя */
-  @SubscribeMessage('get_room')
-  async handleGetRoom(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { userId: string },
-  ) {
-    const rooms = await this.roomService.findByUser(data.userId);
-    const room = rooms?.data?.at?.(0);
+  // @SubscribeMessage('get_room')
+  // async handleGetRoom(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody() data: { userId: string },
+  // ) {
+  //   const rooms = await this.roomService.findByUser(data.userId);
+  //   const room = rooms?.data?.at?.(0);
 
-    return { event: 'room_received', data: room };
-  }
+  //   return { event: 'room_received', data: room };
+  // }
 
   /** Создать комнату */
-  @SubscribeMessage('create_room')
+  @SubscribeMessage(ERoomEvents.CREATE_ROOM)
   async handleCreateRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { userId: string },
@@ -114,17 +117,14 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await client.join(String(response._id));
 
-      return {
-        event: 'room_created',
-        data: { roomId: response._id, creator_id: data.userId },
-      };
+      return { event: ERoomEmits.ROOM_CREATED, data: response };
     } catch (error) {
       return this.handleError(error);
     }
   }
 
   /** Присоединиться к комнате */
-  @SubscribeMessage('join_room')
+  @SubscribeMessage(ERoomEvents.JOIN_ROOM)
   async handleJoinRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; userId: string },
@@ -140,7 +140,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await client.join(data.roomId);
 
-      this.server.to(data.roomId).emit('joined_room', {
+      this.server.to(data.roomId).emit(ERoomEmits.ROOM_REPLENISHED, {
         roomId: data.roomId,
         userId: data.userId,
         users: room.users,
@@ -151,7 +151,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   /** Начать событие → рассылаем жанры */
-  @SubscribeMessage('event_start')
+  @SubscribeMessage(ERoomEvents.START_EVENT)
   async handleEventStart(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
@@ -175,14 +175,16 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const genres = await this.tmdbService.getGenres();
 
-      this.server.to(data.roomId).emit('genres_list', genres.genres);
+      this.server
+        .to(data.roomId)
+        .emit(ERoomEmits.GENRES_LIST_UPDATED, genres.genres);
     } catch (error) {
       return this.handleError(error);
     }
   }
 
   /** Клиенты выбрали жанры */
-  @SubscribeMessage('event_genres_selected')
+  @SubscribeMessage(ERoomEvents.GENRES_SELECTED)
   async handleGenresSelected(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; genreIds: number[]; userId: string },
@@ -206,14 +208,16 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       room.movies = res?.data?.map((m) => String(m.id));
       await room.save();
 
-      this.server.to(data.roomId).emit('movies_list', res?.data);
+      this.server
+        .to(data.roomId)
+        .emit(ERoomEmits.MOVIES_LIST_UPDATED, res?.data);
     } catch (error) {
       return this.handleError(error);
     }
   }
 
   /** Юзер выбрал фильмы */
-  @SubscribeMessage('event_movies_selected')
+  @SubscribeMessage(ERoomEvents.MOVIES_SELECTED)
   async handleMoviesSelected(
     @ConnectedSocket() client: Socket,
     @MessageBody()
@@ -257,14 +261,14 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         ),
       );
 
-      this.server.to(data.roomId).emit('event_results', winners);
+      this.server.to(data.roomId).emit(ERoomEmits.EVENT_RESULTS, winners);
     } catch (error) {
       return this.handleError(error);
     }
   }
 
   /** Выход пользователя / закрытие комнаты */
-  @SubscribeMessage('leave_room')
+  @SubscribeMessage(ERoomEvents.LEAVE_ROOM)
   async handleLeaveRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
@@ -285,7 +289,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await room.save();
 
-      this.server.to(data.roomId).emit('user_left', { userId });
+      this.server.to(data.roomId).emit(ERoomEmits.USER_LEFT, { userId });
       this.server.in(data.roomId).socketsLeave(data.roomId);
     } catch (error) {
       return this.handleError(error);
@@ -293,7 +297,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   /** Закрыть комнату */
-  @SubscribeMessage('close_room')
+  @SubscribeMessage(ERoomEvents.CLOSE_ROOM)
   async handleCloseRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
@@ -308,14 +312,14 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       console.log('❌ Клиент закрыл комнату:', room?._id);
       await this.roomService.remove(data.roomId);
-      this.server.to(data.roomId).emit('room_closed');
+      this.server.to(data.roomId).emit(ERoomEmits.ROOM_CLOSED);
     } catch (error) {
       return this.handleError(error);
     }
   }
 
   /** Перезапуск комнаты (обнуление фильмов и жанров) */
-  @SubscribeMessage('reload_room')
+  @SubscribeMessage(ERoomEvents.RELOAD_ROOM)
   async handleReloadRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
@@ -332,7 +336,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       room.markModified('movieSelections');
       await room.save();
 
-      this.server.to(data.roomId).emit('genres_list', []);
+      this.server.to(data.roomId).emit(ERoomEmits.GENRES_LIST_UPDATED, []);
     } catch (error) {
       return this.handleError(error);
     }
