@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Errors, IQuery, MongoUtils } from 'src/utils';
+import { IArrayRes } from 'src/utils/mongoUtils';
 
 import { Friend, FriendDocument } from '../friends';
 import {
@@ -106,8 +107,12 @@ export class MovieReactionService {
     });
   }
 
-  async findMoviesForUserList(userIds: string[], genres: string) {
-    if (userIds.length === 0 || genres.length === 0) return [];
+  async findMoviesForUserList(
+    userIds: string[],
+    genres: string,
+  ): Promise<IArrayRes<MovieDocument>> {
+    if (userIds.length === 0 || genres.length === 0)
+      return { count: 0, data: [], last: true };
     const userReactions = await this.movieReactionModel.find({
       user_id: { $in: userIds },
     });
@@ -123,7 +128,7 @@ export class MovieReactionService {
       limit: 30,
     } as IQuery;
 
-    return await MongoUtils.getAll({
+    return await MongoUtils.getAll<Model<MovieDocument>, MovieDocument>({
       model: this.movieModel,
       dto: GetMovieDto,
       query,

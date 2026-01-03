@@ -18,6 +18,7 @@ import {
   UsersModule,
   UserSubsModule,
 } from 'src/api';
+import { RoomsStoreModule } from 'src/api/rooms';
 import { RoomsModule } from 'src/sockets';
 
 const node_env = process.env.NODE_ENV;
@@ -47,6 +48,7 @@ const isDev = !node_env || node_env === 'development';
     UserSubsModule,
     MailModule,
 
+    RoomsStoreModule,
     // sockets
     RoomsModule,
   ],
