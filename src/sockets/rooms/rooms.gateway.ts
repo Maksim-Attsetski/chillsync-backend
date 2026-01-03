@@ -1,17 +1,19 @@
+import { Injectable, Scope } from '@nestjs/common';
 import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  SubscribeMessage,
-  MessageBody,
-  ConnectedSocket,
-  OnGatewayDisconnect,
 } from '@nestjs/websockets';
+import crypto from 'crypto';
 import { Server, Socket } from 'socket.io';
 import { CreateMovieDto, MovieReactionService } from 'src/api';
 import { TmdbService } from 'src/api/tmdb/tmdb.service';
 import { IMovie } from 'src/api/tmdb/types';
 import { IArrayRes } from 'src/utils/mongoUtils';
-import crypto from 'crypto';
 
 type TMovieWithReaction = IMovie & { reaction: string };
 
@@ -24,7 +26,8 @@ interface RoomData {
 }
 
 @WebSocketGateway({ cors: { origin: '*' }, namespace: 'rooms' })
-export class RoomsGateway implements OnGatewayDisconnect {
+@Injectable({ scope: Scope.DEFAULT })
+export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -49,7 +52,8 @@ export class RoomsGateway implements OnGatewayDisconnect {
     const roomId = crypto.randomUUID();
     this.clients[client.id] = data.userId;
 
-    this.rooms[roomId] = {
+    console.log('Created roomId', roomId);
+    this.rooms[String(roomId)] = {
       creator_id: data.userId,
       users: [data.userId],
       genresSelections: {},
@@ -57,7 +61,8 @@ export class RoomsGateway implements OnGatewayDisconnect {
       movieSelections: {},
     };
 
-    client.join(roomId);
+    console.log('Created room', this.rooms);
+    client.join(String(roomId));
     return { event: 'room_created', data: { roomId, creator_id: data.userId } };
   }
 
@@ -67,6 +72,9 @@ export class RoomsGateway implements OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; userId: string },
   ) {
+    console.log('====================================');
+    console.log('join_room', data, this.rooms);
+    console.log('====================================');
     const room = this.rooms[data.roomId];
     if (!room) return { event: 'error', data: 'Room not found' };
 
@@ -79,17 +87,14 @@ export class RoomsGateway implements OnGatewayDisconnect {
       userId: data.userId,
       users: room.users,
     });
-    return {
-      event: 'joined_room',
-      data: { roomId: data.roomId, userId: data.userId },
-    };
   }
 
   /** Начать событие → рассылаем жанры */
   @SubscribeMessage('event_start')
   async handleEventStart(@MessageBody() data: { roomId: string }) {
+    console.log(data);
     const room = this.rooms[data.roomId];
-    if (!room) return;
+    if (!room) return { event: 'error', data: 'Room not found' };
 
     const genres = await this.tmdbService.getGenres();
     this.server.to(data.roomId).emit('genres_list', genres.genres);
@@ -178,6 +183,7 @@ export class RoomsGateway implements OnGatewayDisconnect {
     delete this.clients[client.id];
 
     this.server.to(data.roomId).emit('user_left', { userId });
+    this.server.in(data.roomId).socketsLeave(data.roomId);
 
     if (room.users.length === 0) {
       delete this.rooms[data.roomId];
