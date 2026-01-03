@@ -1,7 +1,8 @@
-import { HydratedDocument } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ERoles } from './dto/create-user.dto';
+import { HydratedDocument } from 'mongoose';
 import { Base } from 'src/types';
+
+import { ERoles } from './dto/create-user.dto';
 
 export type UsersDocument = HydratedDocument<Users>;
 
