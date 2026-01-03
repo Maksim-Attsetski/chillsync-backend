@@ -15,7 +15,11 @@ export class RoomStoreService {
     private roomsModel: Model<RoomsDocument>,
   ) {}
 
-  async findAll(query: IQuery) {
+  async findAll(userId: string) {
+    const query: IQuery = {
+      limit: 50,
+      filter: 'creator_id==' + userId,
+    };
     return await MongoUtils.getAll<Model<RoomsDocument>, RoomsDocument>({
       model: this.roomsModel,
       dto: GetRoomDto,
@@ -39,10 +43,16 @@ export class RoomStoreService {
     });
   }
 
-  async findByUser(id: string) {
-    const res = await this.findAll({ filter: 'users_in_' + id });
-
-    return res?.data;
+  async findByUser(userId: string) {
+    const query: IQuery = {
+      limit: 50,
+      filter: 'users_in_' + userId,
+    };
+    return await MongoUtils.getAll<Model<RoomsDocument>, RoomsDocument>({
+      model: this.roomsModel,
+      dto: GetRoomDto,
+      query,
+    });
   }
 
   async update(id: string, updateDto: UpdateRoomDto) {

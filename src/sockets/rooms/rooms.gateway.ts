@@ -27,9 +27,30 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly roomService: RoomStoreService,
   ) {}
 
-  handleConnection(client: Socket) {
+  handleError(err: unknown) {
+    return { event: 'error', data: (err as any)?.message ?? err };
+  }
+
+  async handleConnection(client: Socket) {
     console.log('✅ Клиент подключился:', client.id, client.handshake.auth);
-    this.clients[client.handshake.auth?.userId] = client;
+
+    const userId = client.handshake.auth?.userId;
+    const roomId = client.handshake.auth?.roomId;
+
+    if (userId) {
+      this.clients[userId] = client;
+
+      try {
+        if (roomId) {
+          const room = await this.roomService.findOne(roomId);
+          if (room) {
+            await this.handleJoinRoom(client, { roomId, userId });
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -39,12 +60,17 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log('❌ Клиент отключился:', client.id, userId);
     }
 
-    // void this.removeUserFromRooms(userId);
+    void this.removeUserFromRooms(userId, client.handshake.auth?.roomId);
   }
 
-  private async removeUserFromRooms(userId: string) {
+  private async removeUserFromRooms(userId: string, roomId?: string) {
     const rooms = await this.roomService.findByUser(userId);
-    for (const room of rooms) {
+
+    const curRooms = roomId
+      ? rooms?.data?.filter((r) => r._id?.toString() === roomId)
+      : rooms.data;
+
+    for (const room of curRooms) {
       room.users = room.users.filter((u) => u !== userId);
       delete room.genresSelections[userId];
       delete room.movieSelections[userId];
@@ -53,12 +79,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       room.markModified('movieSelections');
       await room.save();
 
-      this.server.to(String(room._id)).emit('user_left', { userId });
-
-      if (room.users.length === 0) {
-        console.log('❌ Клиент вышел:', room?._id, userId);
-        await this.roomService.remove(String(room._id));
-      }
+      this.server.to(String(room._id)).emit('user_left', { userId, roomId });
     }
   }
 
@@ -69,7 +90,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { userId: string },
   ) {
     const rooms = await this.roomService.findByUser(data.userId);
-    const room = rooms?.at(0);
+    const room = rooms?.data?.at?.(0);
 
     return { event: 'room_received', data: room };
   }
@@ -80,22 +101,26 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { userId: string },
   ) {
-    const response = await this.roomService.create({
-      creator_id: data.userId,
-      users: [data.userId],
-      movies: [],
-      genresSelections: {},
-      movieSelections: {},
-    });
+    try {
+      const response = await this.roomService.create({
+        creator_id: data.userId,
+        users: [data.userId],
+        movies: [],
+        genresSelections: {},
+        movieSelections: {},
+      });
 
-    console.log(response);
+      console.log(response);
 
-    await client.join(String(response._id));
+      await client.join(String(response._id));
 
-    return {
-      event: 'room_created',
-      data: { roomId: response._id, creator_id: data.userId },
-    };
+      return {
+        event: 'room_created',
+        data: { roomId: response._id, creator_id: data.userId },
+      };
+    } catch (error) {
+      return this.handleError(error);
+    }
   }
 
   /** Присоединиться к комнате */
@@ -104,21 +129,25 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; userId: string },
   ) {
-    const room = await this.roomService.findOne(data.roomId);
-    if (!room) return { event: 'error', data: 'Room not found' };
+    try {
+      const room = await this.roomService.findOne(data.roomId);
+      if (!room) return this.handleCreateRoom(client, data);
 
-    if (!room.users.includes(data.userId)) {
-      room.users.push(data.userId);
-      await this.roomService.update(String(room._id), { users: room.users });
+      if (!room.users.includes(data.userId)) {
+        room.users.push(data.userId);
+        await this.roomService.update(String(room._id), { users: room.users });
+      }
+
+      await client.join(data.roomId);
+
+      this.server.to(data.roomId).emit('joined_room', {
+        roomId: data.roomId,
+        userId: data.userId,
+        users: room.users,
+      });
+    } catch (error) {
+      return this.handleError(error);
     }
-
-    await client.join(data.roomId);
-
-    this.server.to(data.roomId).emit('joined_room', {
-      roomId: data.roomId,
-      userId: data.userId,
-      users: room.users,
-    });
   }
 
   /** Начать событие → рассылаем жанры */
@@ -127,25 +156,29 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
   ) {
-    const room = await this.roomService.findOne(data.roomId);
-    if (!room) return;
+    try {
+      const room = await this.roomService.findOne(data.roomId);
+      if (!room) return;
 
-    const sockets = await this.server.in(data.roomId).fetchSockets();
-    console.log(
-      'SOCKETS IN ROOM:',
-      sockets.map((s) => s.id),
-    );
-
-    if (sockets.length !== room?.users?.length) {
-      console.warn('Client not in room, forcing join');
-      await Promise.allSettled(
-        room?.users?.map((id) => this.clients[id]?.join?.(String(room?._id))),
+      const sockets = await this.server.in(data.roomId).fetchSockets();
+      console.log(
+        'SOCKETS IN ROOM:',
+        sockets.map((s) => s.id),
       );
+
+      if (sockets.length !== room?.users?.length) {
+        console.warn('Client not in room, forcing join');
+        await Promise.allSettled(
+          room?.users?.map((id) => this.clients[id]?.join?.(String(room?._id))),
+        );
+      }
+
+      const genres = await this.tmdbService.getGenres();
+
+      this.server.to(data.roomId).emit('genres_list', genres.genres);
+    } catch (error) {
+      return this.handleError(error);
     }
-
-    const genres = await this.tmdbService.getGenres();
-
-    this.server.to(data.roomId).emit('genres_list', genres.genres);
   }
 
   /** Клиенты выбрали жанры */
@@ -154,25 +187,29 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; genreIds: number[]; userId: string },
   ) {
-    const room = await this.roomService.findOne(data.roomId);
-    if (!room) return;
+    try {
+      const room = await this.roomService.findOne(data.roomId);
+      if (!room) return;
 
-    room.genresSelections[data.userId] = data.genreIds;
-    room.markModified('genresSelections');
-    await room.save();
+      room.genresSelections[data.userId] = data.genreIds;
+      room.markModified('genresSelections');
+      await room.save();
 
-    const allSelected = room.users.every((u) => room.genresSelections[u]);
-    if (!allSelected) return;
+      const allSelected = room.users.every((u) => room.genresSelections[u]);
+      if (!allSelected) return;
 
-    const res = await this.moviesReactionService.findMoviesForUserList(
-      room.users,
-      Array.from(Object.values(room.genresSelections)).flat().join(','),
-    );
+      const res = await this.moviesReactionService.findMoviesForUserList(
+        room.users,
+        Array.from(Object.values(room.genresSelections)).flat().join(','),
+      );
 
-    room.movies = res?.data?.map((m) => String(m.id));
-    await room.save();
+      room.movies = res?.data?.map((m) => String(m.id));
+      await room.save();
 
-    this.server.to(data.roomId).emit('movies_list', res?.data);
+      this.server.to(data.roomId).emit('movies_list', res?.data);
+    } catch (error) {
+      return this.handleError(error);
+    }
   }
 
   /** Юзер выбрал фильмы */
@@ -182,43 +219,48 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody()
     data: { roomId: string; movies: TRoomMovie[]; userId: string },
   ) {
-    const room = await this.roomService.findOne(data.roomId);
-    if (!room) return;
+    try {
+      const room = await this.roomService.findOne(data.roomId);
+      if (!room) return;
 
-    room.movieSelections[data.userId] = data.movies;
-    room.markModified('movieSelections');
-    await room.save();
+      room.movieSelections[data.userId] = data.movies;
+      room.markModified('movieSelections');
+      await room.save();
 
-    const allSelected = room.users.every((u) => room.movieSelections[u]);
-    if (!allSelected) return;
+      const allSelected = room.users.every((u) => room.movieSelections[u]);
+      if (!allSelected) return;
 
-    const movieVotes: Record<number, { movie: TRoomMovie; likes: number }> = {};
-    for (const userId of room.users) {
-      const selections = room.movieSelections[userId] ?? [];
-      for (const sel of selections) {
-        if (sel.reaction === 'LIKE') {
-          if (!movieVotes[sel.id])
-            movieVotes[sel.id] = { movie: sel, likes: 0 };
-          movieVotes[sel.id].likes += 1;
+      const movieVotes: Record<number, { movie: TRoomMovie; likes: number }> =
+        {};
+      for (const userId of room.users) {
+        const selections = room.movieSelections[userId] ?? [];
+        for (const sel of selections) {
+          if (sel.reaction === 'LIKE') {
+            if (!movieVotes[sel.id])
+              movieVotes[sel.id] = { movie: sel, likes: 0 };
+            movieVotes[sel.id].likes += 1;
+          }
         }
       }
-    }
 
-    const needed = Math.ceil(room.users.length * 0.8);
-    const winners = Object.values(movieVotes)
-      .filter((m) => m.likes >= needed)
-      .map((m) => m.movie);
+      const needed = Math.ceil(room.users.length * 0.8);
+      const winners = Object.values(movieVotes)
+        .filter((m) => m.likes >= needed)
+        .map((m) => m.movie);
 
-    await Promise.allSettled(
-      room.users.map((id) =>
-        this.moviesReactionService.createMany(
-          room.movieSelections[id] as CreateMovieDto[],
-          id,
+      await Promise.allSettled(
+        room.users.map((id) =>
+          this.moviesReactionService.createMany(
+            room.movieSelections[id] as CreateMovieDto[],
+            id,
+          ),
         ),
-      ),
-    );
+      );
 
-    this.server.to(data.roomId).emit('event_results', winners);
+      this.server.to(data.roomId).emit('event_results', winners);
+    } catch (error) {
+      return this.handleError(error);
+    }
   }
 
   /** Выход пользователя / закрытие комнаты */
@@ -227,26 +269,26 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
   ) {
-    const userId = client.handshake.auth?.userId;
-    if (!userId) return;
-    delete this.clients[userId];
+    try {
+      const userId = client.handshake.auth?.userId;
+      if (!userId) return this.handleError('Вы не авторизованы');
+      delete this.clients[userId];
 
-    const room = await this.roomService.findOne(data.roomId);
-    if (!room) return;
+      const room = await this.roomService.findOne(data.roomId);
+      if (!room) return;
 
-    room.users = room.users.filter((u) => u !== userId);
-    delete room.genresSelections[userId];
-    delete room.movieSelections[userId];
-    room.markModified('genresSelections');
-    room.markModified('movieSelections');
-    await room.save();
+      room.users = room.users.filter((u) => u !== userId);
+      delete room.genresSelections[userId];
+      delete room.movieSelections[userId];
+      room.markModified('genresSelections');
+      room.markModified('movieSelections');
 
-    this.server.to(data.roomId).emit('user_left', { userId });
-    this.server.in(data.roomId).socketsLeave(data.roomId);
+      await room.save();
 
-    if (room.users.length === 0) {
-      console.log('❌ Клиент вышел:', room?._id, userId);
-      await this.roomService.remove(data.roomId);
+      this.server.to(data.roomId).emit('user_left', { userId });
+      this.server.in(data.roomId).socketsLeave(data.roomId);
+    } catch (error) {
+      return this.handleError(error);
     }
   }
 
@@ -256,16 +298,20 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
   ) {
-    const room = await this.roomService.findOne(data.roomId);
-    if (!room) return;
+    try {
+      const room = await this.roomService.findOne(data.roomId);
+      if (!room) return;
 
-    for (const userId of room.users) {
-      if (userId) delete this.clients[userId];
+      for (const userId of room.users) {
+        if (userId) delete this.clients[userId];
+      }
+
+      console.log('❌ Клиент закрыл комнату:', room?._id);
+      await this.roomService.remove(data.roomId);
+      this.server.to(data.roomId).emit('room_closed');
+    } catch (error) {
+      return this.handleError(error);
     }
-
-    this.server.to(data.roomId).emit('room_closed');
-    console.log('❌ Клиент вышел:', room?._id);
-    await this.roomService.remove(data.roomId);
   }
 
   /** Перезапуск комнаты (обнуление фильмов и жанров) */
@@ -274,17 +320,21 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string },
   ) {
-    const room = await this.roomService.findOne(data.roomId);
-    if (!room) return;
+    try {
+      const room = await this.roomService.findOne(data.roomId);
+      if (!room) return;
 
-    room.genresSelections = {};
-    room.movieSelections = {};
-    room.movies = [];
+      room.genresSelections = {};
+      room.movieSelections = {};
+      room.movies = [];
 
-    room.markModified('genresSelections');
-    room.markModified('movieSelections');
-    await room.save();
+      room.markModified('genresSelections');
+      room.markModified('movieSelections');
+      await room.save();
 
-    this.server.to(data.roomId).emit('genres_list', []);
+      this.server.to(data.roomId).emit('genres_list', []);
+    } catch (error) {
+      return this.handleError(error);
+    }
   }
 }
