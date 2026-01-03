@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+
 import { AppModule } from './modules';
 import config from './modules/config';
 
@@ -16,4 +17,4 @@ async function loadServer() {
     console.log('start on ' + PORT);
   });
 }
-loadServer();
+void loadServer();

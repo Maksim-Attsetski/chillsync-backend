@@ -1,21 +1,22 @@
 import {
-  Controller,
-  Get,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
   UseGuards,
-  Post,
 } from '@nestjs/common';
-import { MovieReactionService } from './movie-reactions.service';
-import { UpdateMovieReactionDto } from './dto/update-movie.dto';
-import { Errors, type IQuery } from 'src/utils';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
-import { type ITokenDto } from '../users';
 import { AuthGuard } from 'src/guards';
+import { Errors, type IQuery } from 'src/utils';
+
 import { CreateMovieDto } from '../movies';
+import { type ITokenDto } from '../users';
+import { UpdateMovieReactionDto } from './dto/update-movie.dto';
+import { MovieReactionService } from './movie-reactions.service';
 
 @UseGuards(AuthGuard)
 @Controller('movie-reactions')
@@ -58,6 +59,11 @@ export class MovieReactionController {
       { dependencies: ['movie_id'] },
       user?._id,
     );
+  }
+
+  @Get('stats/:id')
+  stats(@Param('id') id: string) {
+    return this.movieReactionService.stats(id);
   }
 
   @Get(':id')

@@ -1,9 +1,18 @@
-import { Controller, Post, Body, Res, Get, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { CreateUserDto, type ITokenDto, LoginUserDto } from 'src/api';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { AuthGuard } from 'src/guards';
 import { Errors } from 'src/utils';
 
 import { AuthService, IAuthResponse } from './auth.service';
-import { LoginUserDto, CreateUserDto, type ITokenDto } from 'src/api';
-import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
 
 @Controller('auth')
 export class AuthController {
@@ -22,6 +31,13 @@ export class AuthController {
     } else {
       throw Errors.undefinedError();
     }
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  getMe(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
+    if (!user?._id) throw Errors.unauthorized();
+    return this.authService.getMe(user?._id);
   }
 
   @Post('login')

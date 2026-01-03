@@ -1,16 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+
+const isSiteExist = !!process.env.API_URL;
+const SELF_URL = process.env.API_URL + '/ping';
 
 @Injectable()
 export class PingService {
-  constructor(private readonly httpService: HttpService) {}
-  async selfPing() {
+  private readonly logger = new Logger(PingService.name);
+
+  @Cron('*/3 * * * *')
+  async handleCron() {
+    if (!isSiteExist) {
+      this.logger.warn('[PING] Site url is not defined.');
+      return;
+    }
+
     try {
-      const url = process.env.API_URL + 'ping';
-      await firstValueFrom(this.httpService.get(url));
-    } catch (err) {
-      console.error('Self ping failed', err);
+      await fetch(SELF_URL);
+      this.logger.log(`OK, ${new Date().toISOString()}`);
+    } catch (e) {
+      this.logger.log(`Site url `, SELF_URL);
+      this.logger.error('Ошибка при пинге:', e);
     }
   }
 }

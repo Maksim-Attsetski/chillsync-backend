@@ -1,13 +1,14 @@
-import { MongooseModule } from '@nestjs/mongoose';
 import { forwardRef, Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
-import { UsersService } from './users.service';
-import { UsersController } from './users.controller';
-import { Users, UsersSchema } from './users.entity';
 import { AuthModule } from '../auth';
 import { FriendModule } from '../friends';
+import { MailService } from '../mail';
 import { MovieReactionModule } from '../movie-reactions';
 import { SessionsModule } from '../sessions';
+import { UsersController } from './users.controller';
+import { Users, UsersSchema } from './users.entity';
+import { UsersService } from './users.service';
 
 const UserModel = MongooseModule.forFeature([
   { name: Users.name, schema: UsersSchema },
@@ -22,7 +23,7 @@ const UserModel = MongooseModule.forFeature([
     SessionsModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, MailService],
   exports: [UserModel, UsersService],
 })
 export class UsersModule {}

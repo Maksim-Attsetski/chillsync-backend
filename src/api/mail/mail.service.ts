@@ -1,8 +1,9 @@
 // mail.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { ISendDto } from './dto/send.dto';
+
 import { CreateSessionDto } from '../sessions/dto/create.dto';
+import { ISendDto } from './dto/send.dto';
 
 @Injectable()
 export class MailService {
@@ -44,6 +45,19 @@ export class MailService {
       text: '',
       html: `
           <p>В ваш аккаунт был совершен вход с нового устройства ${!dto?.device_name || dto?.device_name === 'unknown' ? dto.user_agent : dto?.device_name}</p>
+          <br/>
+          <p>Если это были не вы, зайдите в приложение и срочно смените пароль!</p>
+        `,
+    });
+  }
+
+  async sendEmailAfterChangePass(userName: string, email: string) {
+    await this.sendMail({
+      to: email,
+      subject: 'Смена пароля!',
+      text: '',
+      html: `
+          <p>${userName}, на вашем аккаунте был изменен пароль</p>
           <br/>
           <p>Если это были не вы, зайдите в приложение и срочно смените пароль!</p>
         `,

@@ -1,11 +1,11 @@
 // parsed-token.pipe.ts
 import {
-  Injectable,
-  PipeTransform,
   ArgumentMetadata,
-  UnauthorizedException,
   createParamDecorator,
   ExecutionContext,
+  Injectable,
+  PipeTransform,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
@@ -23,6 +23,10 @@ export class ParsedTokenPipe implements PipeTransform {
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
         const data = this.jwtService.decode(token);
+
+        if (!data) {
+          throw new UnauthorizedException('Invalid or expired token');
+        }
 
         const user_agent = req.headers['user-agent'] ?? 'unknown';
         return { ...data, user_agent };

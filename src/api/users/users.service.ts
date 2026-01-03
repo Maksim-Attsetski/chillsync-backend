@@ -1,17 +1,17 @@
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
-import { Model } from 'mongoose';
 import { compare, hash } from 'bcryptjs';
+import { Model } from 'mongoose';
+import { Errors, IQuery, MongoUtils } from 'src/utils';
 
-import { MongoUtils, IQuery, Errors } from 'src/utils';
-
-import { UpdateUserDto } from './dto/update-user.dto';
-import { GetUserDto } from './dto/get-user.dto';
-import { Users, UsersDocument } from './users.entity';
-import { ERoles } from './dto/create-user.dto';
 import { FriendService } from '../friends';
+import { MailService } from '../mail';
 import { MovieReactionService } from '../movie-reactions';
 import { SessionsService } from '../sessions';
+import { ERoles } from './dto/create-user.dto';
+import { GetUserDto } from './dto/get-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Users, UsersDocument } from './users.entity';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +23,8 @@ export class UsersService {
     private friendService: FriendService,
     @Inject(forwardRef(() => MovieReactionService))
     private movieReactionService: MovieReactionService,
+    @Inject(forwardRef(() => MailService))
+    private readonly mailService: MailService,
   ) {}
 
   async findAll(query: IQuery) {
@@ -64,19 +66,32 @@ export class UsersService {
     id: string,
     updateUserDto: { last: string; new: string },
   ) {
-    const user = await this.userModel.findById(id);
+    try {
+      const user = await this.userModel.findById(id);
 
-    if (!user) throw Errors.notFound('user');
+      if (!user) throw Errors.notFound('user');
 
-    const isPassEqual = await compare(updateUserDto.last, user?.password);
-    if (!isPassEqual) throw Errors.badRequest('Old password is wrong');
+      const isPassEqual = await compare(updateUserDto.last, user?.password);
+      if (!isPassEqual) throw Errors.badRequest('Старый пароль неверный');
 
-    const hashPassword = await hash(updateUserDto.new, 7);
-    user.password = hashPassword;
-    user.updated_at = Date.now();
+      const hashPassword = await hash(updateUserDto.new, 7);
+      user.password = hashPassword;
+      user.updated_at = Date.now();
 
-    await user.save();
-    return true;
+      void this.mailService.sendEmailAfterChangePass(
+        `${user?.first_name} ${user.last_name}`,
+        user?.email,
+      );
+
+      await user.save();
+      return true;
+    } catch (error) {
+      if (!error?.status) {
+        throw Errors.undefinedError(error?.message ?? error);
+      } else {
+        throw error;
+      }
+    }
   }
 
   async updateRole(id: string, updateUserDto: { role: ERoles }) {

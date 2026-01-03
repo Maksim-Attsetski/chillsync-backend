@@ -1,4 +1,5 @@
 import { Base } from 'src/types';
+
 import { UpdateMovieReactionDto } from './update-movie.dto';
 
 type TDto = UpdateMovieReactionDto & Base;

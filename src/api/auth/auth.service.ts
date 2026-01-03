@@ -1,22 +1,22 @@
-import { hash, compare } from 'bcryptjs';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt/dist';
-
-import { Errors } from 'src/utils';
+import { InjectModel } from '@nestjs/mongoose';
+import { compare, hash } from 'bcryptjs';
+import { Model } from 'mongoose';
 import {
   CreateUserDto as SignupDto,
-  LoginUserDto,
-  Users,
-  UsersDocument,
   GetUserDto,
   ITokenDto,
+  LoginUserDto,
   MailService,
+  Users,
+  UsersDocument,
 } from 'src/api';
-import { v4 } from 'uuid';
-import { SessionsService } from '../sessions';
 import { Config } from 'src/modules';
+import { Errors } from 'src/utils';
+import { v4 } from 'uuid';
+
+import { SessionsService } from '../sessions';
 import { CreateSessionDto } from '../sessions/dto/create.dto';
 
 interface ITokens {
@@ -74,7 +74,7 @@ export class AuthService {
       createdUser,
     );
 
-    this.mailService.sendEmailToNewUser(
+    void this.mailService.sendEmailToNewUser(
       `${dto?.first_name} ${dto.last_name}`,
       dto?.email,
     );
@@ -120,7 +120,9 @@ export class AuthService {
     } as CreateSessionDto;
     const { tokens, isNewSession } =
       await this.sessionsService.generateAndSaveSession(dto, user);
-    isNewSession && this.mailService.sendEmailIfNewSession(dto, user?.email);
+    void (
+      isNewSession && this.mailService.sendEmailIfNewSession(dto, user?.email)
+    );
     return { user, tokens };
   }
 
@@ -150,7 +152,7 @@ export class AuthService {
       await this.sessionsService.generateAndSaveSession(dto, user);
 
     if (isNewSession) {
-      this.mailService.sendEmailIfNewSession(dto, user?.email);
+      void this.mailService.sendEmailIfNewSession(dto, user?.email);
     }
 
     return { user, tokens };
@@ -165,6 +167,7 @@ export class AuthService {
         secret: isRefresh ? Config.refreshSecret : Config.accessSecret,
       });
     } catch (error) {
+      console.log('token error', error);
       return null;
     }
   }
@@ -195,12 +198,16 @@ export class AuthService {
     console.log('isNewSession', isNewSession);
 
     if (isNewSession) {
-      this.mailService.sendEmailIfNewSession(dto, user?.user_id?.email);
+      void this.mailService.sendEmailIfNewSession(dto, user?.user_id?.email);
     }
     return { tokens, user: user?.user_id };
   }
 
   async logout(obj: { user_id: string; user_agent: string }) {
     return await this.sessionsService.delete(obj);
+  }
+
+  async getMe(id: string) {
+    return this.usersModel.findById(id);
   }
 }
