@@ -43,7 +43,12 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       try {
         if (roomId) {
-          await this.handleJoinRoom(client, { roomId, userId });
+          const room = await this.roomService.findOne(roomId);
+          if (room && !room?.users?.includes(userId)) {
+            await this.handleJoinRoom(client, { roomId, userId });
+          } else {
+            await client.join(roomId);
+          }
         }
       } catch (error) {
         console.log(error);
