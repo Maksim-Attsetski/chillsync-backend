@@ -43,10 +43,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       try {
         if (roomId) {
-          const room = await this.roomService.findOne(roomId);
-          if (room && !room?.users?.includes(userId)) {
-            await this.handleJoinRoom(client, { roomId, userId });
-          }
+          await this.handleJoinRoom(client, { roomId, userId });
         }
       } catch (error) {
         console.log(error);
@@ -136,15 +133,16 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!room.users.includes(data.userId)) {
         room.users.push(data.userId);
         await this.roomService.update(String(room._id), { users: room.users });
+
+        this.server.to(data.roomId).emit(ERoomEmits.ROOM_REPLENISHED, {
+          roomId: data.roomId,
+          userId: data.userId,
+          users: room.users,
+        });
+        await client.join(data.roomId);
+      } else {
+        await client.join(data.roomId);
       }
-
-      await client.join(data.roomId);
-
-      this.server.to(data.roomId).emit(ERoomEmits.ROOM_REPLENISHED, {
-        roomId: data.roomId,
-        userId: data.userId,
-        users: room.users,
-      });
     } catch (error) {
       return this.handleError(error);
     }
