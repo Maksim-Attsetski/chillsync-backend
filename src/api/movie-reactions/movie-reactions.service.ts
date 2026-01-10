@@ -184,6 +184,17 @@ export class MovieReactionService {
       watch_later: watch_later?.length,
     };
   }
+  async findByMovie(movie_id: string, user_id: string) {
+    const movie = await this.movieModel.findOne({ id: Number(movie_id) });
+    if (!movie) throw Errors.notFound('Movie');
+
+    const userReaction = await this.movieReactionModel.findOne({
+      user_id,
+      movie_id: movie?._id,
+    });
+    if (!userReaction) throw Errors.notFound('Reaction');
+    return userReaction;
+  }
 
   async findOne(id: string) {
     return await MongoUtils.get({
