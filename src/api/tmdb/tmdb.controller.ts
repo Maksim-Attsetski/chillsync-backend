@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Controller, Get, Param, Query, Res, UseGuards } from '@nestjs/common';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { IsAdminGuard } from 'src/guards';
+import { Errors } from 'src/utils';
 
+import { type ITokenDto } from '../users';
 import { type ITmdbParams, TmdbService } from './tmdb.service';
 import { TGenreResponse, TMoviesResponse } from './types';
-import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
-import { type ITokenDto } from '../users';
-import { Errors } from 'src/utils';
-import { IsAdminGuard } from 'src/guards';
 
 interface ICache<T> {
   expireAt: number;

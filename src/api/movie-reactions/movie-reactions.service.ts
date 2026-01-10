@@ -171,15 +171,13 @@ export class MovieReactionService {
   async stats(user_id: string) {
     const userReactions = await this.movieReactionModel.find({ user_id });
 
+    const now = Date.now();
     const likes = userReactions.filter((r) => r.reaction === 'LIKE');
     const watched = userReactions.filter(
-      (r) => r.viewed_at && r.viewed_at !== 0 && r.viewed_at < Date.now(),
+      (r) => r.viewed_at && r.viewed_at < now,
     );
     const watch_later = userReactions.filter(
-      (r) =>
-        !r.viewed_at ||
-        (r.viewed_at && r.viewed_at === 0) ||
-        r.viewed_at > Date.now(),
+      (r) => r.viewed_at === 0 || r.viewed_at > now,
     );
     const reviews = userReactions.filter((r) => r.rating > 0);
 

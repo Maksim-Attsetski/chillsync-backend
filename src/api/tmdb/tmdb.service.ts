@@ -1,8 +1,9 @@
 import { HttpService } from '@nestjs/axios';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
-import { IMovie, TGenreResponse, TMoviesResponse } from './types';
+
 import { CreateMovieDto, MovieService } from '../movies';
+import { IMovie, TGenreResponse, TMoviesResponse } from './types';
 
 export interface ITmdbParams {
   include_adult?: boolean;
@@ -13,7 +14,8 @@ export interface ITmdbParams {
   page?: number;
 }
 
-const year = 2025;
+const year = new Date().getFullYear() + 2;
+
 @Injectable()
 export class TmdbService {
   private api_key: string;
