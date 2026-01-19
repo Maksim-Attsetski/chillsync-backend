@@ -61,6 +61,15 @@ export class MovieReactionController {
     );
   }
 
+  @Get('find-by-movie/:id')
+  getByMovie(
+    @Param('id') id: string,
+    @ParsedToken(ParsedTokenPipe) user: ITokenDto,
+  ) {
+    if (!user?._id) throw Errors.unauthorized();
+    return this.movieReactionService.findByMovie(id, user?._id);
+  }
+
   @Get('stats/:id')
   stats(@Param('id') id: string) {
     return this.movieReactionService.stats(id);

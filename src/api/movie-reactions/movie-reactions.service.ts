@@ -171,9 +171,14 @@ export class MovieReactionService {
   async stats(user_id: string) {
     const userReactions = await this.movieReactionModel.find({ user_id });
 
+    const now = Date.now();
     const likes = userReactions.filter((r) => r.reaction === 'LIKE');
-    const watched = userReactions.filter((r) => r.viewed_at && r.viewed_at > 0);
-    const watch_later = userReactions.filter((r) => r.viewed_at === 0);
+    const watched = userReactions.filter(
+      (r) => r.viewed_at && r.viewed_at < now,
+    );
+    const watch_later = userReactions.filter(
+      (r) => r.viewed_at === 0 || r.viewed_at > now,
+    );
     const reviews = userReactions.filter((r) => r.rating > 0);
 
     return {
@@ -183,6 +188,17 @@ export class MovieReactionService {
       watched: watched?.length,
       watch_later: watch_later?.length,
     };
+  }
+  async findByMovie(movie_id: string, user_id: string) {
+    const movie = await this.movieModel.findOne({ id: Number(movie_id) });
+    if (!movie) throw Errors.notFound('Movie');
+
+    const userReaction = await this.movieReactionModel.findOne({
+      user_id,
+      movie_id: movie?._id,
+    });
+    if (!userReaction) throw Errors.notFound('Reaction');
+    return userReaction;
   }
 
   async findOne(id: string) {
