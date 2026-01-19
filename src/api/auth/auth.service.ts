@@ -18,6 +18,7 @@ import { v4 } from 'uuid';
 
 import { SessionsService } from '../sessions';
 import { CreateSessionDto } from '../sessions/dto/create.dto';
+import { SettingsService } from '../settings/settings.service';
 
 interface ITokens {
   accessToken: string;
@@ -34,6 +35,8 @@ export class AuthService {
     @InjectModel('Users') private readonly usersModel: Model<UsersDocument>,
     private readonly jwtService: JwtService,
     private readonly sessionsService: SessionsService,
+    @Inject(forwardRef(() => SettingsService))
+    private readonly settingsService: SettingsService,
     @Inject(forwardRef(() => MailService))
     private readonly mailService: MailService,
   ) {}
@@ -46,6 +49,12 @@ export class AuthService {
       public_id: v4(),
       created_at: Date.now(),
     });
+
+    if (createdUser?._id) {
+      void this.settingsService.create({
+        user_id: createdUser?._id.toString(),
+      });
+    }
 
     return createdUser;
   }
@@ -97,12 +106,16 @@ export class AuthService {
     let user = emailIsExist as UsersDocument;
 
     if (!emailIsExist) {
-      user = await this.usersModel.create({
-        email: userData?.email,
-        name: userData?.name || '',
-        providers: ['google'],
-        created_at: Date.now(),
-      });
+      user = await this.createUser(
+        {
+          ...userData,
+          email: userData?.email,
+          first_name: userData?.first_name || '',
+          last_name: userData?.last_name || '',
+        },
+        '',
+        ['google'],
+      );
     }
 
     if (!user && !emailIsExist)

@@ -1,16 +1,17 @@
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Module } from '@nestjs/common';
-import { FriendService } from './friends.service';
+
+import { AuthModule } from '../auth';
 import { FriendController } from './friends.controller';
 import { Friend, FriendSchema } from './friends.entity';
-import { AuthModule } from '../auth';
+import { FriendService } from './friends.service';
 
 export const FriendModel = MongooseModule.forFeature([
   { name: Friend.name, schema: FriendSchema },
 ]);
 
 @Module({
-  imports: [FriendModel, AuthModule],
+  imports: [FriendModel, forwardRef(() => AuthModule)],
   controllers: [FriendController],
   providers: [FriendService],
   exports: [FriendService, FriendModel],

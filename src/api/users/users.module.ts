@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { AuthModule } from '../auth';
 import { FriendModule } from '../friends';
-import { MailService } from '../mail';
+import { MailModule } from '../mail';
 import { MovieReactionModule } from '../movie-reactions';
 import { SessionsModule } from '../sessions';
 import { UsersController } from './users.controller';
@@ -19,11 +19,12 @@ const UserModel = MongooseModule.forFeature([
     UserModel,
     forwardRef(() => MovieReactionModule),
     forwardRef(() => AuthModule),
+    forwardRef(() => MailModule),
     FriendModule,
     SessionsModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService, MailService],
+  providers: [UsersService],
   exports: [UserModel, UsersService],
 })
 export class UsersModule {}

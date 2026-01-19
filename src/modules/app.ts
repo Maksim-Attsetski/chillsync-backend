@@ -36,6 +36,7 @@ const isDev = !node_env || node_env === 'development';
       rootPath: join(__dirname, '..', '..', 'static'),
     }),
     MongooseModule.forRoot(process.env.DB_URL!),
+    MailModule,
     SessionsModule,
     AuthModule,
     UsersModule,
@@ -47,7 +48,6 @@ const isDev = !node_env || node_env === 'development';
     MovieReactionModule,
     TmdbModule,
     UserSubsModule,
-    MailModule,
     SettingsModule,
 
     RoomsStoreModule,
