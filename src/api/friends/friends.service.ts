@@ -1,12 +1,11 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
 import { Errors, IQuery, MongoUtils } from 'src/utils';
 
 import { CreateFriendDto } from './dto/create-friends.dto';
-import { Friend, FriendDocument } from './friends.entity';
 import { GetFriendDto } from './dto/get-friends.dto';
+import { Friend, FriendDocument } from './friends.entity';
 
 @Injectable()
 export class FriendService {
@@ -60,6 +59,34 @@ export class FriendService {
       dto: GetFriendDto,
       query,
     });
+  }
+
+  async findFor(userId: string) {
+    const allUsers = await this.friendModel.find({ user_ids: userId });
+
+    const friends = allUsers.filter((v) => v.waiter === null);
+    const subs = allUsers.filter(
+      (v) => v.waiter !== null && String(v?.waiter as any) !== userId,
+    );
+    const followers = allUsers.filter(
+      (v) => v.waiter !== null && String(v.waiter as any) === userId,
+    );
+
+    return { friends, subs, followers };
+  }
+
+  async findForStat(userId: string) {
+    const allUsers = await this.friendModel.find({ user_ids: userId });
+
+    const friends = allUsers.filter((v) => v.waiter === null).length;
+    const subs = allUsers.filter(
+      (v) => v.waiter !== null && String(v?.waiter as any) !== userId,
+    ).length;
+    const followers = allUsers.filter(
+      (v) => v.waiter !== null && String(v.waiter as any) === userId,
+    ).length;
+
+    return { friends, subs, followers };
   }
 
   async findOne(id: string) {

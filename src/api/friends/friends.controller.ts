@@ -1,20 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { FriendService } from './friends.service';
-import { CreateFriendDto } from './dto/create-friends.dto';
-import { Errors, type IQuery } from 'src/utils';
-import { AuthGuard } from 'src/guards';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { AuthGuard } from 'src/guards';
+import { Errors, type IQuery } from 'src/utils';
+
 import { type ITokenDto } from '../users';
+import { CreateFriendDto } from './dto/create-friends.dto';
+import { FriendService } from './friends.service';
 
 @Controller('friends')
 export class FriendController {
@@ -33,6 +34,16 @@ export class FriendController {
   @Get()
   findAll(@Query() query: IQuery) {
     return this.friendService.findAll(query);
+  }
+
+  @Get('for/:id')
+  findFor(@Query() query: IQuery, @Param('id') id: string) {
+    return this.friendService.findFor(id);
+  }
+
+  @Get('for/:id/stat')
+  findForStat(@Param('id') id: string) {
+    return this.friendService.findForStat(id);
   }
 
   @Get(':id')
