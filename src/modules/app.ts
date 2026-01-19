@@ -13,6 +13,7 @@ import {
   NewsModule,
   PingModule,
   SessionsModule,
+  SettingsModule,
   SubscriptionModule,
   TmdbModule,
   UsersModule,
@@ -47,6 +48,7 @@ const isDev = !node_env || node_env === 'development';
     TmdbModule,
     UserSubsModule,
     MailModule,
+    SettingsModule,
 
     RoomsStoreModule,
     // sockets
