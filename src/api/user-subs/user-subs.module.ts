@@ -1,9 +1,10 @@
-import { MongooseModule } from '@nestjs/mongoose';
 import { Module } from '@nestjs/common';
-import { UserSubsService } from './user-subs.service';
-import { UserSubsController } from './user-subs.controller';
-import { UserSubscription, UserSubSchema } from './user-subs.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+
 import { AuthModule } from '../auth';
+import { UserSubsController } from './user-subs.controller';
+import { UserSubSchema, UserSubscription } from './user-subs.entity';
+import { UserSubsService } from './user-subs.service';
 
 export const UserSubsModel = MongooseModule.forFeature([
   { name: UserSubscription.name, schema: UserSubSchema },

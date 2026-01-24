@@ -19,6 +19,8 @@ export class ParsedTokenPipe implements PipeTransform {
 
     const authHeader = req?.headers?.['authorization'];
 
+    console.log(req?.headers);
+
     try {
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];

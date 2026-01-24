@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
-import { IsAdminGuard } from 'src/guards';
+import { AuthGuard, IsAdminGuard } from 'src/guards';
 import { Errors, type IQuery } from 'src/utils';
 
 import { type ITokenDto } from '../users';
@@ -18,6 +18,7 @@ import { CreateUserSubDto } from './dto/create.dto';
 import { UpdateUserSubDto as UpdateSubsDto } from './dto/update.dto';
 import { UserSubsService } from './user-subs.service';
 
+@UseGuards(AuthGuard)
 @Controller('user-subscriptions')
 export class UserSubsController {
   constructor(private readonly subsService: UserSubsService) {}
