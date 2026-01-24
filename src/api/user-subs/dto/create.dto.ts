@@ -1,5 +1,5 @@
 export class CreateUserSubDto {
-  subId: string;
-  userId: string;
-  expitedAt: number;
+  sub_id: string;
+  user_id: string;
+  expired_at: number;
 }
