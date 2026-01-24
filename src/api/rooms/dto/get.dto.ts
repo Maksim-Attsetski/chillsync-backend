@@ -7,8 +7,8 @@ export type TRoomMovie = IMovie & {
 
 export class GetRoomDto implements IBase {
   _id: string;
-  created_at: number;
-  updated_at: number;
+  updated_at: Date | null;
+  created_at: Date;
 
   creator_id: string | null;
   users: string[];

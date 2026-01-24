@@ -2,15 +2,15 @@ import { Prop, Schema } from '@nestjs/mongoose';
 
 @Schema()
 export class Base {
-  @Prop()
-  created_at: number;
+  @Prop({ type: Date })
+  created_at: Date;
 
-  @Prop({ default: null })
-  updated_at: number;
+  @Prop({ type: Date, default: null })
+  updated_at: Date | null;
 }
 
 export interface IBase {
-  updated_at: number | null;
-  created_at: number;
+  updated_at: Date | null;
+  created_at: Date;
   _id: string;
 }

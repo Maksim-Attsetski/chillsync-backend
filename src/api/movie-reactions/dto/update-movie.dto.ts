@@ -5,5 +5,5 @@ export class UpdateMovieReactionDto extends PartialType(
   CreateMovieReactionDto,
 ) {
   rating: number;
-  viewed_at: number | null;
+  viewed_at: Date | null;
 }

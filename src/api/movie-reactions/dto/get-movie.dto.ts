@@ -6,11 +6,11 @@ type TDto = UpdateMovieReactionDto & Base;
 
 export class GetMovieReactionDto implements TDto {
   rating: number;
-  viewed_at: number | null;
+  viewed_at: Date | null;
   movie_id?: string;
   user_id?: string;
   reaction?: string;
-  updated_at: number;
   _id: string;
-  created_at: number;
+  updated_at: Date | null;
+  created_at: Date;
 }

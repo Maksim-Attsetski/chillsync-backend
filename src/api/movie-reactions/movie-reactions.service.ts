@@ -174,10 +174,12 @@ export class MovieReactionService {
     const now = Date.now();
     const likes = userReactions.filter((r) => r.reaction === 'LIKE');
     const watched = userReactions.filter(
-      (r) => r.viewed_at && r.viewed_at < now,
+      (r) => r.viewed_at && r.viewed_at.getTime() < now,
     );
     const watch_later = userReactions.filter(
-      (r) => r.viewed_at === 0 || r.viewed_at > now,
+      (r) =>
+        r.viewed_at === new Date('1970-01-01') ||
+        (r.viewed_at?.getTime?.() ?? 0) > now,
     );
     const reviews = userReactions.filter((r) => r.rating > 0);
 

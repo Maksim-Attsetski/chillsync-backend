@@ -12,9 +12,9 @@ export class GetMovieDto implements TDto {
   overview?: string;
   vote_average?: number;
   vote_count?: number;
-  updated_at: number;
   reaction: string;
-  _id: string;
-  created_at: number;
   release_date?: string;
+  _id: string;
+  updated_at: Date | null;
+  created_at: Date;
 }

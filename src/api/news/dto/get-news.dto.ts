@@ -7,8 +7,8 @@ export class GetNewsDto implements TDto {
   title?: string;
   tag?: string;
   preview?: string;
-  updated_at: number;
-  _id: string;
-  created_at: number;
   description?: string;
+  _id: string;
+  updated_at: Date | null;
+  created_at: Date;
 }

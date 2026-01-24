@@ -41,7 +41,7 @@ export class FriendService {
       if (!item) throw Errors.notFound('Friend ');
 
       item.waiter = item.user_ids[String(item.user_ids[0]) === userId ? 1 : 0];
-      item.updated_at = Date.now();
+      item.updated_at = new Date();
 
       await item.save();
       return await item.populate(Object.keys(new GetFriendDto()));

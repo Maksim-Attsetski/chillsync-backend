@@ -76,7 +76,7 @@ export class UsersService {
 
       const hashPassword = await hash(updateUserDto.new, 7);
       user.password = hashPassword;
-      user.updated_at = Date.now();
+      user.updated_at = new Date();
 
       void this.mailService.sendEmailAfterChangePass(
         `${user?.first_name} ${user.last_name}`,
@@ -100,7 +100,7 @@ export class UsersService {
     if (!user) throw Errors.notFound('user');
 
     user.role = updateUserDto.role;
-    user.updated_at = Date.now();
+    user.updated_at = new Date();
 
     await user.save();
     return true;

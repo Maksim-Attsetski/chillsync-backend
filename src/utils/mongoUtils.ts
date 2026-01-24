@@ -82,7 +82,7 @@ class MongoUtils {
 
     const newItem = await model.create({
       ...(data as R),
-      created_at: Date.now(),
+      created_at: new Date(),
     });
 
     if (dto) {
@@ -104,7 +104,7 @@ class MongoUtils {
   }: IProps<D>): Promise<R> {
     const item = await model.findByIdAndUpdate(
       id,
-      { ...(data as Partial<D>), updated_at: Date.now() },
+      { ...(data as Partial<D>), updated_at: new Date() },
       { new: true },
     );
     if (!item) throw Errors.notFound(error);
