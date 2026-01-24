@@ -1,13 +1,12 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-
 import { Errors, IQuery, MongoUtils } from 'src/utils';
 
 import { CreateUserSubDto } from './dto/create.dto';
-import { UpdateUserSubDto as UpdateSubsDto } from './dto/update.dto';
-import { UserSubscription, userSubDocument } from './user-subs.entity';
 import { GetUserSubDto as GetSubsDto } from './dto/get.dto';
+import { UpdateUserSubDto as UpdateSubsDto } from './dto/update.dto';
+import { userSubDocument, UserSubscription } from './user-subs.entity';
 
 @Injectable()
 export class UserSubsService {
@@ -29,6 +28,12 @@ export class UserSubsService {
       dto: GetSubsDto,
       query,
     });
+  }
+  async findByUser(user_id: string) {
+    const sub = await this.subsModel.findOne({ user_id });
+
+    if (!sub) return Errors.notFound('Subscribe');
+    return sub;
   }
 
   async findOne(id: string) {

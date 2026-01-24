@@ -1,20 +1,22 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { UserSubsService } from './user-subs.service';
+import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { IsAdminGuard } from 'src/guards';
+import { Errors, type IQuery } from 'src/utils';
+
+import { type ITokenDto } from '../users';
 import { CreateUserSubDto } from './dto/create.dto';
 import { UpdateUserSubDto as UpdateSubsDto } from './dto/update.dto';
-import { type IQuery } from 'src/utils';
-
-import { IsAdminGuard } from 'src/guards';
+import { UserSubsService } from './user-subs.service';
 
 @Controller('user-subscriptions')
 export class UserSubsController {
@@ -29,6 +31,14 @@ export class UserSubsController {
   @Get()
   findAll(@Query() query: IQuery) {
     return this.subsService.findAll(query);
+  }
+
+  @Get('/user')
+  findByUser(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
+    if (!user?._id) return Errors.unauthorized();
+    console.log(user?._id);
+
+    return this.subsService.findByUser(user?._id);
   }
 
   @Get(':id')

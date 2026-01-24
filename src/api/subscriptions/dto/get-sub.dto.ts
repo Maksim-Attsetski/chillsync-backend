@@ -1,4 +1,5 @@
 import { IBase } from 'src/types';
+
 import { UpdateSubDto } from './update-sub.dto';
 
 type TDto = UpdateSubDto & IBase;
