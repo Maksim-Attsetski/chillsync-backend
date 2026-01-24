@@ -30,7 +30,7 @@ export class UserSubsService {
     });
   }
   async findByUser(user_id: string) {
-    const sub = await this.subsModel.findOne({ user_id });
+    const sub = await this.subsModel.findOne({ user_id, populate: 'sub_id' });
 
     if (!sub) return Errors.notFound('Subscribe');
     return sub;

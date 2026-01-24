@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { Users } from '../users';
-import { Subscription } from '../subscriptions';
 import { Base } from 'src/types';
+
+import { Subscription } from '../subscriptions';
+import { Users } from '../users';
 
 export type userSubDocument = HydratedDocument<UserSubscription>;
 
