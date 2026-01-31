@@ -18,6 +18,7 @@ import {
   TmdbModule,
   UsersModule,
   UserSubsModule,
+  StatsModule,
 } from 'src/api';
 import { RoomsStoreModule } from 'src/api/rooms';
 import { RoomsModule } from 'src/sockets';
@@ -49,6 +50,8 @@ const isDev = !node_env || node_env === 'development';
     TmdbModule,
     UserSubsModule,
     SettingsModule,
+
+    StatsModule,
 
     RoomsStoreModule,
     // sockets

@@ -11,3 +11,4 @@ export * from './subscriptions';
 export * from './tmdb';
 export * from './user-subs';
 export * from './users';
+export * from './stats';

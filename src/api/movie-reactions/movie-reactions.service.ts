@@ -88,10 +88,18 @@ export class MovieReactionService {
     });
   }
 
+  async findByUser(user_id: string, populate?: boolean) {
+    if (populate) {
+      return await this.movieReactionModel
+        .find({ user_id })
+        .populate('movie_id');
+    }
+
+    return await this.movieReactionModel.find({ user_id });
+  }
+
   async findMoviesForMe(query: IQuery, userId: string) {
-    const userReactions = await this.movieReactionModel.find({
-      user_id: userId,
-    });
+    const userReactions = await this.findByUser(userId);
 
     const newFilter = `_id_not_in_${userReactions.map((r) => r.movie_id).join(',')}`;
     if (query?.filter) {
