@@ -19,4 +19,9 @@ export class StatsController {
   genres(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
     return this.subsService.genres(user?._id);
   }
+
+  @Get('/friends')
+  friends(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
+    return this.subsService.friends(user?._id);
+  }
 }

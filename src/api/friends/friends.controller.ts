@@ -41,11 +41,6 @@ export class FriendController {
     return this.friendService.findFor(id);
   }
 
-  @Get('for/:id/stat')
-  findForStat(@Param('id') id: string) {
-    return this.friendService.findForStat(id);
-  }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.friendService.findOne(id);

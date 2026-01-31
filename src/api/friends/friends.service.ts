@@ -64,27 +64,25 @@ export class FriendService {
   async findFor(userId: string) {
     const allUsers = await this.friendModel.find({ user_ids: userId });
 
-    const friends = allUsers.filter((v) => v.waiter === null);
-    const subs = allUsers.filter(
-      (v) => v.waiter !== null && String(v?.waiter as any) !== userId,
-    );
-    const followers = allUsers.filter(
-      (v) => v.waiter !== null && String(v.waiter as any) === userId,
-    );
+    const friends: Friend[] = [];
+    const subs: Friend[] = [];
+    const followers: Friend[] = [];
 
-    return { friends, subs, followers };
-  }
+    for (let inx = 0; inx < allUsers.length; inx++) {
+      const v = allUsers[inx];
 
-  async findForStat(userId: string) {
-    const allUsers = await this.friendModel.find({ user_ids: userId });
-
-    const friends = allUsers.filter((v) => v.waiter === null).length;
-    const subs = allUsers.filter(
-      (v) => v.waiter !== null && String(v?.waiter as any) !== userId,
-    ).length;
-    const followers = allUsers.filter(
-      (v) => v.waiter !== null && String(v.waiter as any) === userId,
-    ).length;
+      if (v.waiter === null) {
+        friends.push(v);
+        continue;
+      }
+      if (v.waiter !== null && String(v?.waiter as any) !== userId) {
+        subs.push(v);
+        continue;
+      }
+      if (v.waiter !== null && String(v.waiter as any) === userId) {
+        followers.push(v);
+      }
+    }
 
     return { friends, subs, followers };
   }

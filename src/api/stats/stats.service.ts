@@ -1,18 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  MovieReaction,
-  MovieReactionDocument,
-  MovieReactionService,
-} from '../movie-reactions';
+import { MovieReaction, MovieReactionDocument } from '../movie-reactions';
 import { Errors } from 'src/utils';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
+import { FriendService } from '../friends';
 
 @Injectable()
 export class StatsService {
   constructor(
     @Inject()
-    private reactionService: MovieReactionService,
+    private friendsService: FriendService,
     @InjectModel(MovieReaction.name)
     private movieReactionModel: Model<MovieReactionDocument>,
   ) {}
@@ -64,7 +61,7 @@ export class StatsService {
 
   async profile(user_id?: string) {
     if (!user_id) return Errors.unauthorized();
-    const userReactions = await this.reactionService.findByUser(user_id);
+    const userReactions = await this.movieReactionModel.find({ user_id });
     return this.profileData(userReactions);
   }
 
@@ -110,5 +107,15 @@ export class StatsService {
     }
 
     return result;
+  }
+
+  async friends(user_id: string) {
+    const data = await this.friendsService.findFor(user_id);
+
+    return {
+      friends: data?.friends?.length ?? 0,
+      subs: data?.subs?.length ?? 0,
+      followers: data?.followers?.length ?? 0,
+    };
   }
 }
