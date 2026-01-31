@@ -10,18 +10,20 @@ export class GetRoomDto implements IBase {
   updated_at: Date | null;
   created_at: Date;
 
+  activated_at: string | null;
+  name: string;
   creator_id: string | null;
   users: string[];
 
   /**
    * userId -> genreIds[]
    */
-  genresSelections: Record<string, number[]>;
+  genres_selections: Record<string, number[]>;
 
   /**
    * userId -> selected movies
    */
-  movieSelections: Record<string, TRoomMovie[]>;
+  movie_selections: Record<string, TRoomMovie[]>;
 
   /**
    * tmdb movie ids

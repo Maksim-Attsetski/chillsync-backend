@@ -30,7 +30,7 @@ export class RoomStoreService {
   async create(newRoom: CreateRoomDto) {
     return await MongoUtils.create<Model<RoomsDocument>, RoomsDocument>({
       model: this.roomsModel,
-      data: newRoom,
+      data: { ...newRoom, activated_at: new Date() },
     });
   }
 

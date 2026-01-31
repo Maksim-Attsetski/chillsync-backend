@@ -8,46 +8,31 @@ export type RoomsDocument = HydratedDocument<Room>;
 
 @Schema()
 export class Room extends Base {
-  /**
-   * Итоговый список фильмов-победителей (id или tmdbId)
-   */
-  @Prop({
-    type: [String],
-    default: [],
-  })
+  /** Название комнаты */
+  @Prop({ type: String, required: true })
+  name: string | null;
+
+  /** Итоговый список фильмов-победителей (id или tmdbId) */
+  @Prop({ type: [String], default: [] })
   movies: string[];
 
-  /**
-   * Пользователи в комнате
-   */
-  @Prop({
-    type: [String],
-    required: true,
-  })
+  /** Пользователи в комнате */
+  @Prop({ type: [String], required: true })
   users: string[];
 
-  /**
-   * Создатель комнаты
-   */
-  @Prop({
-    type: String,
-    required: true,
-  })
+  /** Создатель комнаты */
+  @Prop({ type: String, required: true })
   creator_id: string | null;
 
-  /**
-   * userId -> genreIds[]
-   */
-  @Prop({
-    type: Object,
-    of: [Number],
-    default: {},
-  })
-  genresSelections: Record<string, number[]>;
+  /** Создатель комнаты */
+  @Prop({ type: String, required: true })
+  activated_at: string | null;
 
-  /**
-   * userId -> выбранные фильмы
-   */
+  /** userId -> genreIds[] */
+  @Prop({ type: Object, of: [Number], default: {} })
+  genres_selections: Record<string, number[]>;
+
+  /** userId -> выбранные фильмы */
   @Prop({
     type: Object,
     of: [
@@ -62,7 +47,7 @@ export class Room extends Base {
     ],
     default: {},
   })
-  movieSelections: Record<string, TRoomMovie[]>;
+  movie_selections: Record<string, TRoomMovie[]>;
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);
