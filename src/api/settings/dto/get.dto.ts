@@ -9,6 +9,7 @@ export class GetSettingDto implements TDto {
   updated_at: Date | null;
   created_at: Date;
   user_id: string;
+  is_guide_completed: boolean;
   theme: string;
-  statVisability: string;
+  stat_visability: string;
 }

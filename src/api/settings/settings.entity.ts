@@ -18,6 +18,9 @@ export class Setting extends Base {
   @Prop({ default: 'SYSTEM' })
   theme: string;
 
+  @Prop({ default: false })
+  isGuideCompleted: boolean;
+
   @Prop({ default: 'ALL' })
   statVisability: string;
 }
