@@ -70,11 +70,6 @@ export class MovieReactionController {
     return this.movieReactionService.findByMovie(id, user?._id);
   }
 
-  @Get('stats/:id')
-  stats(@Param('id') id: string) {
-    return this.movieReactionService.stats(id);
-  }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.movieReactionService.findOne(id);
