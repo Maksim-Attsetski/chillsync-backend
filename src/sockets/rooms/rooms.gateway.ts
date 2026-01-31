@@ -29,7 +29,8 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  private clients: Record<string, Socket> = {}; // client.id → user_id
+  private clients: Record<string, Socket> = {}; // user_id -> client.id
+  private users: Record<string, GetUserDto> = {}; // user_id -> user
 
   constructor(
     private readonly moviesReactionService: MovieReactionService,
@@ -45,12 +46,15 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('✅ Клиент подключился:', client.id, client.handshake.auth);
 
     const user_id = client.handshake.auth?.user_id;
-    const user = client.handshake.auth?.user;
+    const user: GetUserDto = client.handshake.auth?.user;
     const room_id = client.handshake.auth?.room_id;
     const room_name = client.handshake.auth?.room_name;
 
     if (user_id) {
       this.clients[user_id] = client;
+      if (user?._id) {
+        this.users[user_id] = user;
+      }
 
       try {
         if (room_id) {
@@ -123,6 +127,11 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: ICreateRoomDto,
   ) {
     if (!data?.name) return;
+
+    if (data?.user?._id) {
+      this.users[data?.user?._id] = data?.user;
+    }
+
     try {
       const response = await this.roomService.create({
         creator_id: data.user_id,
@@ -153,6 +162,9 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: IJoinRoomDto,
   ) {
     try {
+      if (data?.user?._id) {
+        this.users[data?.user?._id] = data?.user;
+      }
       const room = await this.roomService.findOne(data.room_id);
       if (!room) return this.handleCreateRoom(client, data);
 
@@ -163,11 +175,20 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       await client.join(data.room_id);
 
+      const joined_users: GetUserDto[] = [];
+
+      room.users.forEach((u) => {
+        const user = this.users[u];
+        if (user) {
+          joined_users.push(user);
+        }
+      });
+
       this.server.to(data.room_id).emit(ERoomEmits.ROOM_REPLENISHED, {
         room_id: data.room_id,
         user_id: data.user_id,
         users: room.users,
-        joined_user: data?.user,
+        joined_users,
       });
     } catch (error) {
       return this.handleError(error);
