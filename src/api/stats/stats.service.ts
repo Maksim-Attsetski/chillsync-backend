@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MovieReaction, MovieReactionDocument } from '../movie-reactions';
-import { Errors } from 'src/utils';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { FriendService } from '../friends';
+import { Errors } from 'src/utils';
 
 @Injectable()
 export class StatsService {
@@ -60,27 +60,26 @@ export class StatsService {
   }
 
   async profile(user_id?: string) {
-    if (!user_id) return Errors.unauthorized();
+    if (!user_id) {
+      const userReactions = await this.movieReactionModel.find();
+      return this.profileData(userReactions);
+    }
+
     const userReactions = await this.movieReactionModel.find({ user_id });
     return this.profileData(userReactions);
   }
 
   async genres(user_id?: string) {
-    if (!user_id) return Errors.unauthorized();
-
-    const userObjectId = new mongoose.Types.ObjectId(user_id);
+    const match: any = { reaction: 'LIKE' };
+    if (user_id) {
+      match.user_id = new mongoose.Types.ObjectId(user_id);
+    }
 
     const data = await this.movieReactionModel.aggregate<{
       _id: number;
       count: number;
     }>([
-      {
-        $match: {
-          user_id: userObjectId,
-          reaction: 'LIKE',
-        },
-      },
-
+      { $match: match },
       {
         $lookup: {
           from: 'movies', // имя коллекции Movie
@@ -109,7 +108,8 @@ export class StatsService {
     return result;
   }
 
-  async friends(user_id: string) {
+  async friends(user_id?: string) {
+    if (!user_id) return Errors.unauthorized();
     const data = await this.friendsService.findFor(user_id);
 
     return {

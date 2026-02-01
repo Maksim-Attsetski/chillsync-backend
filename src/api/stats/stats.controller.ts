@@ -1,8 +1,6 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { Controller, Get, UseGuards, Param } from '@nestjs/common';
 import { AuthGuard } from 'src/guards';
 
-import { type ITokenDto } from '../users';
 import { StatsService } from './stats.service';
 
 @UseGuards(AuthGuard)
@@ -11,17 +9,27 @@ export class StatsController {
   constructor(private readonly subsService: StatsService) {}
 
   @Get('/profile')
-  profile(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
-    return this.subsService.profile(user?._id);
+  profileByAll() {
+    return this.subsService.profile();
+  }
+
+  @Get('/profile/:id')
+  profile(@Param('id') id: string) {
+    return this.subsService.profile(id);
   }
 
   @Get('/genres')
-  genres(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
-    return this.subsService.genres(user?._id);
+  genresByAll() {
+    return this.subsService.genres();
   }
 
-  @Get('/friends')
-  friends(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
-    return this.subsService.friends(user?._id);
+  @Get('/genres/:id')
+  genres(@Param('id') id: string) {
+    return this.subsService.genres(id);
+  }
+
+  @Get('/friends/:id')
+  friends(@Param('id') id: string) {
+    return this.subsService.friends(id);
   }
 }
