@@ -85,11 +85,11 @@ export class FriendService {
         friends.push(v);
         continue;
       }
-      if (v.waiter !== null && String(v?.waiter as any) !== userId) {
+      if (v.waiter !== null && String((v?.waiter as any)?._id) !== userId) {
         followers.push(v);
         continue;
       }
-      if (v.waiter !== null && String(v.waiter as any) === userId) {
+      if (v.waiter !== null && String((v?.waiter as any)?._id) === userId) {
         requests.push(v);
       }
     }
