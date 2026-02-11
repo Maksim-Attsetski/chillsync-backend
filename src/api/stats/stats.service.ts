@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { MovieReaction, MovieReactionDocument } from '../movie-reactions';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { FriendService } from '../friends';
 import { Errors } from 'src/utils';
+
+import { FriendService } from '../friends';
+import { MovieReaction, MovieReactionDocument } from '../movie-reactions';
 
 @Injectable()
 export class StatsService {
@@ -14,7 +15,7 @@ export class StatsService {
     private movieReactionModel: Model<MovieReactionDocument>,
   ) {}
 
-  private async profileData(userReactions: MovieReaction[]) {
+  private profileData(userReactions: MovieReaction[]) {
     const now = Date.now();
 
     let likes = 0;
@@ -114,7 +115,7 @@ export class StatsService {
 
     return {
       friends: data?.friends?.length ?? 0,
-      subs: data?.subs?.length ?? 0,
+      subs: data?.requests?.length ?? 0,
       followers: data?.followers?.length ?? 0,
     };
   }
