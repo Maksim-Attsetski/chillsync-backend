@@ -2,8 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Base } from 'src/types';
 
-import { Users } from '../users';
 import { Movie } from '../movies';
+import { Users } from '../users';
 
 export type MovieReactionDocument = HydratedDocument<MovieReaction>;
 

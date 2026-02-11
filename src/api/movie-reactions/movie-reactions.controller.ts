@@ -28,6 +28,18 @@ export class MovieReactionController {
     return this.movieReactionService.findAll(query);
   }
 
+  @Get('random/:user_id')
+  getRandomMovie(
+    @Param('user_id') user_id?: string,
+    @ParsedToken(ParsedTokenPipe) user?: ITokenDto,
+  ) {
+    if (!user?._id) throw Errors.unauthorized();
+    if (!user_id) throw Errors.notFound('Friend');
+    if (user?._id === user_id) throw Errors.badRequest('Одинаковые айди');
+
+    return this.movieReactionService.getRandomMovie(user?._id, user_id);
+  }
+
   @Get('suggest-evening')
   suggestEvening(@ParsedToken(ParsedTokenPipe) user: ITokenDto) {
     if (!user?._id) throw Errors.unauthorized();

@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Errors, IQuery, MongoUtils } from 'src/utils';
 import { IArrayRes } from 'src/utils/mongoUtils';
 
@@ -186,6 +186,45 @@ export class MovieReactionService {
     });
     if (!userReaction) throw Errors.notFound('Reaction');
     return userReaction;
+  }
+
+  async getRandomMovie(userId: string, friendId: string) {
+    const result = await this.movieReactionModel.aggregate([
+      {
+        $match: {
+          user_id: {
+            $in: [
+              new mongoose.Types.ObjectId(userId),
+              new mongoose.Types.ObjectId(friendId),
+            ],
+          },
+          movie_id: { $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: '$movie_id',
+          users: { $addToSet: '$user_id' },
+        },
+      },
+      {
+        $match: {
+          users: { $size: 2 }, // оба пользователя
+        },
+      },
+      {
+        $sample: { size: 1 }, // рандом
+      },
+    ]);
+
+    if (!result.length) {
+      throw Errors.notFound('Movie');
+    }
+
+    // подтягиваем фильм
+    const movie = await this.movieModel.findById(result[0]._id).lean();
+
+    return movie;
   }
 
   async findOne(id: string) {
