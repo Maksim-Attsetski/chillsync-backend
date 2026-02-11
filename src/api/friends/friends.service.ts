@@ -75,7 +75,7 @@ export class FriendService {
       .lean();
 
     const friends: Friend[] = [];
-    const subs: Friend[] = [];
+    const requests: Friend[] = [];
     const followers: Friend[] = [];
 
     for (let inx = 0; inx < allUsers.length; inx++) {
@@ -86,15 +86,15 @@ export class FriendService {
         continue;
       }
       if (v.waiter !== null && String(v?.waiter as any) !== userId) {
-        subs.push(v);
+        followers.push(v);
         continue;
       }
       if (v.waiter !== null && String(v.waiter as any) === userId) {
-        followers.push(v);
+        requests.push(v);
       }
     }
 
-    return { friends, subs, followers };
+    return { friends, requests, followers };
   }
 
   async findOne(id: string) {
