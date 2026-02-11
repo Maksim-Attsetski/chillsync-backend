@@ -62,7 +62,17 @@ export class FriendService {
   }
 
   async findFor(userId: string) {
-    const allUsers = await this.friendModel.find({ user_ids: userId });
+    const allUsers = await this.friendModel
+      .find({ user_ids: userId })
+      .populate({
+        path: 'user_ids',
+        select: '_id first_name last_name',
+      })
+      .populate({
+        path: 'waiter',
+        select: '_id first_name last_name',
+      })
+      .lean();
 
     const friends: Friend[] = [];
     const subs: Friend[] = [];
