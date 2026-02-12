@@ -1,8 +1,10 @@
-import { Base } from 'src/types';
 
 import { UpdateMovieReactionDto } from './update-movie.dto';
 
-type TDto = UpdateMovieReactionDto & Base;
+type TDto = UpdateMovieReactionDto & {
+  updated_at: Date | null;
+  created_at: Date | null;
+};
 
 export class GetMovieReactionDto implements TDto {
   rating: number;
@@ -12,5 +14,5 @@ export class GetMovieReactionDto implements TDto {
   reaction?: string;
   _id: string;
   updated_at: Date | null;
-  created_at: Date;
+  created_at: Date | null;
 }

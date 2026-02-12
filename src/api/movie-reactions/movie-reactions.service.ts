@@ -58,6 +58,8 @@ export class MovieReactionService {
             movie_id: new Types.ObjectId(m._id),
             user_id: new Types.ObjectId(userId),
             reaction: dtoObject[m.id] ?? 'LIKE',
+            updated_at: new Date(),
+            created_at: new Date(),
           },
           upsert: true,
         },
