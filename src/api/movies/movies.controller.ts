@@ -1,17 +1,18 @@
 import {
-  Controller,
-  Get,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
   Query,
 } from '@nestjs/common';
-import { MovieService } from './movies.service';
-import { UpdateMovieDto } from './dto/update-movie.dto';
-import { type IQuery } from 'src/utils';
 import { ParsedToken, ParsedTokenPipe } from 'src/decorators/TokenDecorator';
+import { type IQuery } from 'src/utils';
+
 import type { ITokenDto } from '../users';
+import { UpdateMovieDto } from './dto/update-movie.dto';
+import { MovieService } from './movies.service';
 
 @Controller('movies')
 export class MovieController {
@@ -22,6 +23,11 @@ export class MovieController {
     @ParsedToken(ParsedTokenPipe) user: ITokenDto,
   ) {
     return this.movieService.findAll(query);
+  }
+
+  @Get('by-titles')
+  findByTitles(@Query('titles') titles: string) {
+    return this.movieService.findMoviesByTitles(titles);
   }
 
   @Get(':id')

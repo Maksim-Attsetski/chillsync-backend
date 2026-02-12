@@ -9,6 +9,9 @@ export class Movie extends Base {
   @Prop({ required: true })
   title: string;
 
+  @Prop({ default: '', index: true })
+  normalized_title: string;
+
   @Prop({ required: true, unique: true })
   id: number;
 
@@ -35,3 +38,6 @@ export class Movie extends Base {
 }
 
 export const MovieSchema = SchemaFactory.createForClass(Movie);
+
+MovieSchema.index({ title_normalized: 1 });
+MovieSchema.index({ title: 'text' }); // для предфильтрации кандидатов
