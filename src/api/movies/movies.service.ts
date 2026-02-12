@@ -76,7 +76,7 @@ export class MovieService {
     const titles = Array.from(
       new Set(
         raw
-          .split(/\r?\n/)
+          .split('#$%')
           .map((t) => t.trim())
           .filter(Boolean),
       ),
